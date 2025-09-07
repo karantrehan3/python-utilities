@@ -1,0 +1,11 @@
+services:
+  pdf-unlock-api:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount a volume for temporary files if needed
+      - /tmp:/tmp
+    restart: unless-stopped

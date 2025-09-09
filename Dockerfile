@@ -18,8 +18,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Add src to Python path
+ENV PYTHONPATH=/app/src
+
 # Expose port
-EXPOSE 4000
+EXPOSE 4001
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "4000"]
+CMD ["uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "4001"]

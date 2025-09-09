@@ -1,8 +1,8 @@
 services:
-  pdf-unlock-api:
+  python-utilities-api:
     build: .
     ports:
-      - "4000:4000"
+      - "4001:4001"
     environment:
       - PYTHONUNBUFFERED=1
     volumes:

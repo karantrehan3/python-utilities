@@ -16,16 +16,19 @@ python-utilities/
 │   │   ├── dependencies/ # Common dependencies and utilities
 │   │   │   ├── __init__.py
 │   │   │   └── common.py # Shared functionality
-│   │   ├── routers/      # API routers for each utility
+│   │   ├── routes/       # API routes for each utility
 │   │   │   ├── __init__.py
-│   │   │   ├── base.py   # Base router class
-│   │   │   ├── pdf_unlock.py
-│   │   │   └── text_utils.py
+│   │   │   └── api/      # API versioning
+│   │   │       └── v1/   # API v1 routes
+│   │   │           ├── pdf/    # PDF utilities
+│   │   │           ├── text/   # Text utilities
+│   │   │           └── image/  # Image utilities
 │   │   ├── __init__.py
-│   │   └── main.py       # Main FastAPI application
+│   │   └── server.py     # Main FastAPI application
 │   └── tests/            # Test modules
 │       ├── __init__.py
-│       └── test_text_utils.py
+│       ├── test_text_utils.py
+│       └── test_image_utils.py
 ├── requirements.txt      # Unified dependencies
 ├── setup.py             # Package configuration
 ├── Dockerfile           # Docker configuration
@@ -37,17 +40,26 @@ python-utilities/
 
 ### Current Utilities
 
-1. **PDF Unlock** (`/api/v1/pdf/unlock`)
+1. **PDF Utilities** (`/api/v1/pdf`)
 
    - Unlock password-protected PDF files
    - Endpoint: `POST /api/v1/pdf/unlock`
    - Parameters: `file` (PDF file), `password` (string)
 
-2. **Text Utilities** (`/api/v1/text-utils`)
-   - MD5 hashing: `POST /api/v1/text-utils/hash/md5`
-   - SHA256 hashing: `POST /api/v1/text-utils/hash/sha256`
-   - Base64 encoding: `POST /api/v1/text-utils/encode/base64`
-   - Base64 decoding: `POST /api/v1/text-utils/decode/base64`
+2. **Text Utilities** (`/api/v1/text`)
+
+   - Hash generation: `POST /api/v1/text/hash`
+   - Base64 encoding: `POST /api/v1/text/encode`
+   - Base64 decoding: `POST /api/v1/text/decode`
+   - Supported algorithms: `GET /api/v1/text/algorithms`
+   - Supported encodings: `GET /api/v1/text/encodings`
+
+3. **Image Utilities** (`/api/v1/image`)
+   - Image resize: `POST /api/v1/image/resize`
+   - Image convert: `POST /api/v1/image/convert`
+   - Image info: `POST /api/v1/image/info`
+   - File upload variants: `/resize/file`, `/convert/file`, `/info/file`
+   - Supported formats: `GET /api/v1/image/formats`
 
 ### API Documentation
 
@@ -122,25 +134,48 @@ with open("unlocked.pdf", "wb") as f:
 ### Text Utilities
 
 ```bash
-# MD5 Hash
-curl -X POST "http://localhost:4001/api/v1/text-utils/hash/md5" \
+# Hash Generation
+curl -X POST "http://localhost:4001/api/v1/text/hash" \
   -H "Content-Type: application/json" \
-  -d '{"text": "Hello, World!"}'
-
-# SHA256 Hash
-curl -X POST "http://localhost:4001/api/v1/text-utils/hash/sha256" \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Hello, World!"}'
+  -d '{"text": "Hello, World!", "algorithm": "md5"}'
 
 # Base64 Encode
-curl -X POST "http://localhost:4001/api/v1/text-utils/encode/base64" \
+curl -X POST "http://localhost:4001/api/v1/text/encode" \
   -H "Content-Type: application/json" \
-  -d '{"text": "Hello, World!"}'
+  -d '{"text": "Hello, World!", "encoding": "base64"}'
 
 # Base64 Decode
-curl -X POST "http://localhost:4001/api/v1/text-utils/decode/base64" \
+curl -X POST "http://localhost:4001/api/v1/text/decode" \
   -H "Content-Type: application/json" \
-  -d '{"text": "SGVsbG8sIFdvcmxkIQ=="}'
+  -d '{"text": "SGVsbG8sIFdvcmxkIQ==", "encoding": "base64"}'
+
+# Get supported algorithms
+curl -X GET "http://localhost:4001/api/v1/text/algorithms"
+
+# Get supported encodings
+curl -X GET "http://localhost:4001/api/v1/text/encodings"
+```
+
+### Image Utilities
+
+```bash
+# Resize Image
+curl -X POST "http://localhost:4001/api/v1/image/resize" \
+  -H "Content-Type: application/json" \
+  -d '{"image_data": "base64_encoded_image", "format": "PNG", "width": 100, "height": 100}'
+
+# Convert Image
+curl -X POST "http://localhost:4001/api/v1/image/convert" \
+  -H "Content-Type: application/json" \
+  -d '{"image_data": "base64_encoded_image", "format": "PNG", "target_format": "JPEG"}'
+
+# Get Image Info
+curl -X POST "http://localhost:4001/api/v1/image/info" \
+  -H "Content-Type: application/json" \
+  -d '{"image_data": "base64_encoded_image"}'
+
+# Get supported formats
+curl -X GET "http://localhost:4001/api/v1/image/formats"
 ```
 
 ### Python Examples
@@ -149,78 +184,87 @@ curl -X POST "http://localhost:4001/api/v1/text-utils/decode/base64" \
 import requests
 
 # Text utilities
-base_url = "http://localhost:4001/api/v1/text-utils"
+base_url = "http://localhost:4001/api/v1/text"
 
-# MD5 hash
-response = requests.post(f"{base_url}/hash/md5", json={"text": "Hello, World!"})
+# Hash generation
+response = requests.post(f"{base_url}/hash", json={"text": "Hello, World!", "algorithm": "md5"})
 print(response.json())  # {"result": "65a8e27d8879283831b664bd8b7f0ad4"}
 
 # Base64 encode
-response = requests.post(f"{base_url}/encode/base64", json={"text": "Hello, World!"})
+response = requests.post(f"{base_url}/encode", json={"text": "Hello, World!", "encoding": "base64"})
 encoded = response.json()["result"]
 
 # Base64 decode
-response = requests.post(f"{base_url}/decode/base64", json={"text": encoded})
+response = requests.post(f"{base_url}/decode", json={"text": encoded, "encoding": "base64"})
 print(response.json())  # {"result": "Hello, World!"}
+
+# Image utilities
+image_url = "http://localhost:4001/api/v1/image"
+
+# Resize image
+response = requests.post(f"{image_url}/resize", json={
+    "image_data": "base64_encoded_image",
+    "format": "PNG",
+    "width": 100,
+    "height": 100
+})
+print(response.json())  # {"result": "resized_image_base64", "format": "PNG", "size": "100x100"}
 ```
 
 ## Adding New Utilities
 
 To add a new utility:
 
-1. **Create a new router file** in `src/app/routers/`:
+1. **Create a new utility directory** in `src/app/routes/api/v1/`:
 
    ```python
-   # src/app/routers/new_utility.py
-   from .base import BaseUtilityRouter, UtilityInfo
-   from ..dependencies.common import UtilityResponse, ValidationError
+   # src/app/routes/api/v1/new_utility/__init__.py
+   from fastapi import APIRouter
+   from .controller import NewUtilityController
+   from .validator import NewUtilityRequest, NewUtilityResponse
 
-   class NewUtilityRouter(BaseUtilityRouter):
-       def __init__(self):
-           super().__init__(
-               prefix="/new-utility",
-               tags=["New Utility"]
-           )
+   # Create the router
+   router = APIRouter()
 
-       def get_utility_info(self):
-           info = UtilityInfo(
-               name="New Utility",
-               description="Description of your utility",
-               version="1.0.0",
-               endpoints=[
-                   {"name": "process", "description": "POST /process - Process data"}
-               ]
-           )
-           return info.to_dict()
-
-       def _setup_routes(self):
-           self._add_info_route()
-
-           @self.router.post("/process")
-           async def process():
-               # Your utility logic here
-               return UtilityResponse.success({"result": "processed"})
-
-   # Create the router instance
-   new_utility_router = NewUtilityRouter()
-   router = new_utility_router.router
-   ```
-
-2. **Add the router** to `src/app/main.py`:
-
-   ```python
-   from .routers import new_utility
-
-   app.include_router(
-       new_utility.router,
-       prefix=settings.api_prefix,
-       tags=["New Utility"]
+   @router.post(
+       "/process",
+       response_model=NewUtilityResponse,
+       summary="Process Data",
+       description="Process data using the new utility",
    )
+   async def process_data(request: NewUtilityRequest):
+       return await NewUtilityController.process_data(request)
+
+   @router.get(
+       "/",
+       summary="New Utility Info",
+       description="Get information about the new utility",
+   )
+   async def get_utility_info():
+       return {
+           "utility": "New Utility",
+           "description": "Description of your utility",
+           "version": "1.0.0",
+           "endpoints": {
+               "process": "POST /process - Process data"
+           }
+       }
    ```
 
-3. **Update dependencies** in `requirements.txt` if needed
+2. **Add the router** to `src/app/routes/api/v1/__init__.py`:
 
-4. **Add tests** in `src/tests/test_new_utility.py`
+   ```python
+   from src.app.routes.api.v1.new_utility import router as new_utility_router
+
+   # Include the new utility router
+   router.include_router(new_utility_router, prefix="/new-utility", tags=["New Utility"])
+   ```
+
+3. **Create controller and validator files** in the new utility directory
+
+4. **Update dependencies** in `requirements.txt` if needed
+
+5. **Add tests** in `src/tests/test_new_utility.py`
 
 ## Benefits of Unified Architecture
 
@@ -256,10 +300,16 @@ To add a new utility:
 # Test the API
 curl http://localhost:4001/health
 
-# Test PDF unlock
-curl -X POST "http://localhost:4001/unlock-pdf/unlock" \
-  -F "file=@test.pdf" \
-  -F "password=test"
+# Test text utilities
+curl -X POST "http://localhost:4001/api/v1/text/hash" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "test", "algorithm": "md5"}'
+
+# Test image utilities
+curl -X GET "http://localhost:4001/api/v1/image/formats"
+
+# Run all tests
+make test
 ```
 
 ## License

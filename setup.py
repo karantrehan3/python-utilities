@@ -39,7 +39,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "python-utilities-api=src.app.main:main",
+            "python-utilities-api=src.app.server:main",
         ],
     },
 )

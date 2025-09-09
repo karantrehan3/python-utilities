@@ -6,6 +6,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
+      # Mount src folder for live code changes
+      - ./src:/app/src
       # Mount a volume for temporary files if needed
       - /tmp:/tmp
+    command: uvicorn src.app.server:app --host 0.0.0.0 --port 4001 --reload
     restart: unless-stopped

@@ -25,4 +25,4 @@ ENV PYTHONPATH=/app/src
 EXPOSE 4001
 
 # Run the application
-CMD ["uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "4001"]
+CMD ["uvicorn", "src.app.server:app", "--host", "0.0.0.0", "--port", "4001"]

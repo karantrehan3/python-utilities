@@ -8,4 +8,10 @@ pydantic-settings==2.6.1
 # PDF processing
 PyMuPDF==1.26.4
 
+# Image processing
+Pillow==11.3.0
+
+# HTTP requests for URL downloads
+httpx==0.28.1
+
 # Additional utilities can be added here as needed

@@ -53,6 +53,31 @@ async def get_pdf_info(
     return await PDFController.get_pdf_info(file, include_metadata)
 
 
+@router.post(
+    "/subset",
+    summary="Create PDF Subset",
+    description="Create a subset of PDF pages from start_page to end_page",
+    response_description="Subset PDF file for download",
+)
+async def create_pdf_subset(
+    file: UploadFile = File(..., description="The PDF file"),
+    start_page: int = Form(..., description="Starting page number (1-indexed)"),
+    end_page: int = Form(..., description="Ending page number (1-indexed)"),
+):
+    """
+    Create a subset of PDF pages from start_page to end_page.
+
+    Args:
+        file: The PDF file
+        start_page: Starting page number (1-indexed)
+        end_page: Ending page number (1-indexed)
+
+    Returns:
+        The subset PDF file for download
+    """
+    return await PDFController.create_pdf_subset(file, start_page, end_page)
+
+
 @router.get(
     "/",
     summary="PDF Utilities Info",

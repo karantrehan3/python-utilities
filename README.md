@@ -45,6 +45,12 @@ python-utilities/
    - Unlock password-protected PDF files
    - Endpoint: `POST /api/v1/pdf/unlock`
    - Parameters: `file` (PDF file), `password` (string)
+   - Get PDF information
+   - Endpoint: `POST /api/v1/pdf/info`
+   - Parameters: `file` (PDF file), `include_metadata` (boolean)
+   - Create PDF subset (extract specific pages)
+   - Endpoint: `POST /api/v1/pdf/subset`
+   - Parameters: `file` (PDF file), `start_page` (integer), `end_page` (integer)
 
 2. **Text Utilities** (`/api/v1/text`)
 

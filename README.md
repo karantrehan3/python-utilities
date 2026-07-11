@@ -18,6 +18,7 @@ A unified FastAPI server that bundles PDF, image, and text utilities behind a si
 | `/unlock` | POST | Unlock a password-protected PDF |
 | `/info` | POST | Get page count, encryption status, metadata |
 | `/subset` | POST | Extract a page range into a new PDF |
+| `/merge` | POST | Merge multiple PDFs into one |
 | `/from-images` | POST | Combine multiple images into a single PDF |
 | `/compress` | POST | Compress a PDF (returns the file) |
 | `/compress/info` | POST | Compress a PDF (returns size-reduction stats) |

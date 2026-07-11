@@ -50,6 +50,20 @@ async def create_pdf_subset(
 
 
 @router.post(
+    "/merge",
+    summary="Merge PDFs",
+    description="Merge multiple PDF files into a single document, in the order provided",
+    response_description="Merged PDF file for download",
+)
+async def merge_pdfs(
+    files: List[UploadFile] = File(
+        ..., description="PDF files to merge (order is preserved)"
+    ),
+):
+    return await PDFController.merge_pdfs(files)
+
+
+@router.post(
     "/from-images",
     summary="Images to PDF",
     description="Convert multiple image files into a single PDF document",
@@ -133,6 +147,7 @@ async def get_pdf_utilities_info():
             "unlock": "POST /unlock - Unlock a password-protected PDF file",
             "info": "POST /info - Get information about a PDF file",
             "subset": "POST /subset - Extract a page range into a new PDF",
+            "merge": "POST /merge - Merge multiple PDFs into one",
             "from_images": "POST /from-images - Combine images into a PDF",
             "compress": "POST /compress - Compress a PDF (returns file)",
             "compress_info": "POST /compress/info - Compress a PDF (returns stats JSON)",

@@ -209,6 +209,63 @@ class PDFController:
             )
 
     @staticmethod
+    async def merge_pdfs(files: List[UploadFile]) -> Response:
+        if len(files) < 2:
+            raise ValidationError("At least two PDF files are required", "files")
+
+        temp_paths: List[str] = []
+        temp_output_path = None
+
+        try:
+            for f in files:
+                if not f.filename or not f.filename.lower().endswith(".pdf"):
+                    raise ValidationError(
+                        f"All files must be PDFs, got: {f.filename}", "files"
+                    )
+                content = await f.read()
+                path = FileHandler.create_temp_file(suffix=".pdf")
+                with open(path, "wb") as tmp:
+                    tmp.write(content)
+                temp_paths.append(path)
+
+            temp_output_path = FileHandler.create_temp_file(suffix="_merged.pdf")
+
+            merged = fitz.open()
+            for path in temp_paths:
+                doc = fitz.open(path)
+                merged.insert_pdf(doc)
+                doc.close()
+
+            merged.save(temp_output_path)
+            merged.close()
+
+            with open(temp_output_path, "rb") as merged_file:
+                file_content = merged_file.read()
+
+            asyncio.create_task(
+                FileHandler.cleanup_temp_files(*temp_paths, temp_output_path)
+            )
+
+            return Response(
+                content=file_content,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": 'attachment; filename="merged.pdf"',
+                    "Content-Length": str(len(file_content)),
+                },
+            )
+
+        except ValidationError:
+            raise
+        except Exception as e:
+            for path in temp_paths:
+                if os.path.exists(path):
+                    os.unlink(path)
+            if temp_output_path and os.path.exists(temp_output_path):
+                os.unlink(temp_output_path)
+            raise ProcessingError(f"An error occurred while merging PDFs: {str(e)}")
+
+    @staticmethod
     async def images_to_pdf(files: List[UploadFile]) -> Response:
         if len(files) < 1:
             raise ValidationError("At least one image file is required", "files")

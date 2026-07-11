@@ -1,39 +1,69 @@
-# Python Utilities API (Unified Server)
+# ───── Full Stack (Docker) ─────
+
 start:
-	docker-compose down && \
-	docker-compose build && \
-	docker-compose up
+	docker compose down && \
+	docker compose build && \
+	docker compose up
 
-# Development mode (run locally without Docker)
+stop:
+	docker compose down
+
+clean:
+	docker compose down
+	docker system prune -f
+
+# ───── Development (local, with HMR) ─────
+
 dev:
-	pip install -r requirements.txt && \
-	PYTHONPATH=src python -m src.app.server
+	$(MAKE) -j2 dev-server dev-client
 
-# Development mode with auto-reload
-dev-reload:
-	pip install -r requirements.txt && \
+dev-server:
+	cd server && \
+	. venv/bin/activate && \
 	PYTHONPATH=src uvicorn src.app.server:app --host 0.0.0.0 --port 4001 --reload
 
-# Stop the services
-stop:
-	docker-compose down
+dev-client:
+	cd client && npm run dev
 
-# Run tests
-test:
-	PYTHONPATH=src python -m pytest src/tests/ -v
+# ───── Install ─────
 
 install:
+	$(MAKE) install-server install-client
+
+install-server:
+	cd server && \
+	python -m venv venv && \
+	. venv/bin/activate && \
 	pip install -r requirements.txt
 
-# Install development dependencies
+install-client:
+	cd client && npm ci
+
 install-dev:
+	cd server && \
+	. venv/bin/activate && \
 	pip install -r requirements-dev.txt
 	pre-commit install
 
-# Clean up
-clean:
-	docker-compose down
-	docker system prune -f
+# ───── Tests ─────
 
-# Legacy command for backward compatibility
-unlock-pdf: start
+test:
+	$(MAKE) test-server test-client
+
+test-server:
+	cd server && \
+	. venv/bin/activate && \
+	PYTHONPATH=src python -m pytest src/tests/ -v
+
+test-client:
+	cd client && npm test
+
+# ───── Formatting ─────
+
+format:
+	cd client && npx prettier --write "src/**/*.{ts,tsx}"
+	cd server && . venv/bin/activate && black src/ && isort src/
+
+lint:
+	cd client && npx prettier --check "src/**/*.{ts,tsx}" && npx eslint src/
+	cd server && . venv/bin/activate && flake8 src/

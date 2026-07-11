@@ -1,15 +1,56 @@
-# [Python Utilities API](https://karantrehan3.github.io/python-utilities/)
+# [Python Utilities](https://karantrehan3.github.io/python-utilities/)
 
 <p align="center">
   <img alt="python" src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white" />
   <img alt="fastapi" src="https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white" />
+  <img alt="react" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" />
+  <img alt="typescript" src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" />
   <img alt="docker" src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white" />
   <img alt="license" src="https://img.shields.io/badge/license-MIT-green" />
 </p>
 
-A unified FastAPI server that bundles PDF, image, and text utilities behind a single API. One container, one port, all your processing needs.
+Full-stack utility toolkit — a React frontend with a FastAPI backend for PDF, image, and text processing. One `make dev` and you're running both with hot reload.
 
-## Utilities
+## Project structure
+
+```
+python-utilities/
+├── client/                 # React + Vite + Mantine UI
+│   ├── src/
+│   │   ├── components/     # PDF, Image, Text operation pages
+│   │   ├── api/            # API client wrappers
+│   │   └── hooks/          # Shared React hooks
+│   ├── Dockerfile          # Multi-stage (dev + prod)
+│   └── package.json
+├── server/                 # FastAPI backend
+│   ├── src/app/
+│   │   ├── routes/api/v1/  # pdf/, image/, text/ controllers
+│   │   ├── core/           # Config and settings
+│   │   └── server.py       # App factory
+│   ├── Dockerfile
+│   └── requirements.txt
+├── docker-compose.yml      # Orchestrates client + server
+├── Makefile                # Dev, build, test, format commands
+└── index.html              # GitHub Pages landing page
+```
+
+## Quick start
+
+### Local development (recommended)
+
+```bash
+make install        # install server venv + client node_modules
+make dev            # runs both with HMR (server :4001, client :3000)
+```
+
+### Docker
+
+```bash
+make start          # build & run both services
+make stop           # tear down
+```
+
+## API endpoints
 
 ### PDF (`/api/v1/pdf`)
 
@@ -45,23 +86,6 @@ A unified FastAPI server that bundles PDF, image, and text utilities behind a si
 | `/algorithms` | GET | List supported hash algorithms |
 | `/encodings` | GET | List supported encodings |
 
-## Quick start
-
-### Docker (recommended)
-
-```bash
-make start          # build & run on port 4001
-make stop           # tear down
-```
-
-### Local development
-
-```bash
-make install-dev    # install deps + pre-commit hooks
-make dev-reload     # uvicorn with auto-reload on :4001
-make test           # pytest
-```
-
 ## Usage examples
 
 ```bash
@@ -70,52 +94,41 @@ curl -X POST http://localhost:4001/api/v1/pdf/unlock \
   -F "file=@protected.pdf" -F "password=secret" \
   -o unlocked.pdf
 
-# Combine images into a PDF
-curl -X POST http://localhost:4001/api/v1/pdf/from-images \
-  -F "files=@page1.png" -F "files=@page2.jpg" \
-  -o combined.pdf
-
-# Compress a PDF
-curl -X POST http://localhost:4001/api/v1/pdf/compress \
-  -F "file=@large.pdf" -F "image_quality=60" \
-  -o compressed.pdf
-
-# Compression stats (JSON)
-curl -X POST http://localhost:4001/api/v1/pdf/compress/info \
-  -F "file=@large.pdf" -F "image_quality=60"
+# Merge PDFs
+curl -X POST http://localhost:4001/api/v1/pdf/merge \
+  -F "files=@doc1.pdf" -F "files=@doc2.pdf" \
+  -o merged.pdf
 
 # Hash text
 curl -X POST http://localhost:4001/api/v1/text/hash \
   -H "Content-Type: application/json" \
   -d '{"text": "hello", "algorithm": "sha256"}'
-
-# Resize an image
-curl -X POST http://localhost:4001/api/v1/image/resize/file \
-  -F "file=@photo.png" -F "width=200" -F "height=200"
 ```
+
+## Make targets
+
+| Target | Description |
+|--------|-------------|
+| `make dev` | Run server + client locally with HMR |
+| `make start` | Docker Compose build and up |
+| `make stop` | Docker Compose down |
+| `make test` | Run server + client tests |
+| `make format` | Prettier (client) + Black/isort (server) |
+| `make lint` | ESLint (client) + Flake8 (server) |
+| `make install` | Install all dependencies |
 
 ## API docs
 
 - **Swagger UI** — [localhost:4001/docs](http://localhost:4001/docs)
 - **ReDoc** — [localhost:4001/redoc](http://localhost:4001/redoc)
-- **Health** — [localhost:4001/health](http://localhost:4001/health)
-
-## Project structure
-
-```
-src/app/
-├── core/config.py          # Settings
-├── dependencies/common.py  # FileHandler, error classes
-├── routes/api/v1/
-│   ├── pdf/                # unlock, info, subset, from-images, compress
-│   ├── image/              # resize, convert, info (base64/URL/file)
-│   └── text/               # hash, encode, decode
-└── server.py               # FastAPI app factory
-```
 
 ## Tech stack
 
-Python 3.13 · FastAPI · PyMuPDF (fitz) · Pillow · Pydantic v2 · Docker
+**Frontend:** React 19 · TypeScript · Vite · Mantine v7 · React Router
+
+**Backend:** Python 3.13 · FastAPI · PyMuPDF (fitz) · Pillow · Pydantic v2
+
+**Infra:** Docker · Docker Compose · Nginx (prod)
 
 ## License
 

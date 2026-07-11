@@ -1,14 +1,32 @@
 services:
-  python-utilities-api:
-    build: .
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
     ports:
       - "4001:4001"
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
-      # Mount src folder for live code changes
-      - ./src:/app/src
-      # Mount a volume for temporary files if needed
-      - /tmp:/tmp
+      - ./server/src:/app/src
     command: uvicorn src.app.server:app --host 0.0.0.0 --port 4001 --reload
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "4002:4002"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - VITE_API_URL=http://server:4001
+    volumes:
+      - ./client/src:/app/src
+      - ./client/index.html:/app/index.html
+      - ./client/vite.config.ts:/app/vite.config.ts
+    depends_on:
+      - server
     restart: unless-stopped

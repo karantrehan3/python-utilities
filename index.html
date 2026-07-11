@@ -9,14 +9,9 @@
     <meta property="og:title" content="Python Utilities" />
     <meta property="og:description" content="28 tools for PDF, image &amp; text processing. Full-stack React + FastAPI toolkit." />
     <meta property="og:type" content="website" />
-    <script>
-      (function () {
-        var t = localStorage.getItem('theme');
-        if (t) document.documentElement.setAttribute('data-theme', t);
-      })();
-    </script>
+    <script>(function(){var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)})()</script>
     <style>
-      /* ── Design tokens: dark (default) ── */
+      /* ── Dark tokens (default) ── */
       :root {
         --bg: #0d1117;
         --surface: #161b22;
@@ -50,9 +45,29 @@
         --ease: cubic-bezier(0.16, 1, 0.3, 1);
         --mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, 'Fira Code', monospace;
         --sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+        /* Mock app tokens (Mantine dark) */
+        --mock-bg: #1a1b1e;
+        --mock-surface: #25262b;
+        --mock-nav: #2c2e33;
+        --mock-border: #373a40;
+        --mock-text: #c1c2c5;
+        --mock-text-dim: #909296;
+        --mock-accent: #228be6;
+        --mock-hover: rgba(34, 139, 230, 0.1);
+        /* Feature badge colors */
+        --feat-drag: rgba(250, 176, 5, 0.12);
+        --feat-drag-text: #fab005;
+        --feat-preview: rgba(34, 139, 230, 0.12);
+        --feat-preview-text: #339af0;
+        --feat-visual: rgba(81, 207, 102, 0.12);
+        --feat-visual-text: #51cf66;
+        --feat-live: rgba(255, 107, 107, 0.12);
+        --feat-live-text: #ff6b6b;
+        --feat-copy: rgba(204, 93, 232, 0.12);
+        --feat-copy-text: #cc5de8;
       }
 
-      /* ── Light theme via OS preference ── */
+      /* ── Light via OS preference ── */
       @media (prefers-color-scheme: light) {
         :root {
           --bg: #f6f8fa;
@@ -78,6 +93,16 @@
           --code-comment: #6e7781;
           --badge-bg: rgba(9, 105, 218, 0.06);
           --badge-text: var(--accent);
+          --feat-drag: rgba(224, 148, 0, 0.1);
+          --feat-drag-text: #9a6700;
+          --feat-preview: rgba(9, 105, 218, 0.08);
+          --feat-preview-text: #0969da;
+          --feat-visual: rgba(26, 127, 55, 0.08);
+          --feat-visual-text: #1a7f37;
+          --feat-live: rgba(207, 34, 46, 0.08);
+          --feat-live-text: #cf222e;
+          --feat-copy: rgba(130, 80, 223, 0.08);
+          --feat-copy-text: #8250df;
         }
       }
 
@@ -106,6 +131,16 @@
         --code-comment: #546178;
         --badge-bg: rgba(88, 166, 255, 0.08);
         --badge-text: var(--accent);
+        --feat-drag: rgba(250, 176, 5, 0.12);
+        --feat-drag-text: #fab005;
+        --feat-preview: rgba(34, 139, 230, 0.12);
+        --feat-preview-text: #339af0;
+        --feat-visual: rgba(81, 207, 102, 0.12);
+        --feat-visual-text: #51cf66;
+        --feat-live: rgba(255, 107, 107, 0.12);
+        --feat-live-text: #ff6b6b;
+        --feat-copy: rgba(204, 93, 232, 0.12);
+        --feat-copy-text: #cc5de8;
       }
 
       /* ── Explicit light override ── */
@@ -133,14 +168,40 @@
         --code-comment: #6e7781;
         --badge-bg: rgba(9, 105, 218, 0.06);
         --badge-text: var(--accent);
+        --feat-drag: rgba(224, 148, 0, 0.1);
+        --feat-drag-text: #9a6700;
+        --feat-preview: rgba(9, 105, 218, 0.08);
+        --feat-preview-text: #0969da;
+        --feat-visual: rgba(26, 127, 55, 0.08);
+        --feat-visual-text: #1a7f37;
+        --feat-live: rgba(207, 34, 46, 0.08);
+        --feat-live-text: #cf222e;
+        --feat-copy: rgba(130, 80, 223, 0.08);
+        --feat-copy-text: #8250df;
+      }
+
+      /* ── Terminal always dark in light mode ── */
+      :root[data-theme="light"] .terminal-body,
+      :root[data-theme="light"] .code-block pre {
+        --code-flag: #79c0ff;
+        --code-string: #a5d6ff;
+        color: #b4c0d4;
+      }
+      @media (prefers-color-scheme: light) {
+        .terminal-body {
+          --code-flag: #79c0ff;
+          --code-string: #a5d6ff;
+          --code-comment: #546178;
+        }
+        .code-block pre {
+          --code-flag: #79c0ff;
+          --code-string: #a5d6ff;
+          --code-comment: #546178;
+        }
       }
 
       /* ── Reset ── */
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-      }
+      *, *::before, *::after { box-sizing: border-box; }
       html {
         scroll-behavior: smooth;
         -webkit-font-smoothing: antialiased;
@@ -153,9 +214,7 @@
         font-family: var(--sans);
         line-height: 1.6;
       }
-      a {
-        color: inherit;
-      }
+      a { color: inherit; }
 
       .wrap {
         max-width: 1160px;
@@ -193,11 +252,8 @@
         transform: translateY(-2px);
         border-color: var(--accent);
       }
-      .nav-label {
-      }
-      .has-nav .hero {
-        padding-top: clamp(5rem, 3.5rem + 5vw, 7.5rem);
-      }
+      .nav-label {}
+      .has-nav .hero { padding-top: clamp(5rem, 3.5rem + 5vw, 7.5rem); }
 
       /* ── Theme toggle ── */
       .theme-toggle {
@@ -220,21 +276,15 @@
         padding: 0;
         color: var(--text);
         font-family: var(--sans);
-        transition: transform 0.2s var(--ease), border-color 0.2s var(--ease),
-          box-shadow 0.2s var(--ease);
+        transition: transform 0.2s var(--ease), border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
       }
       .theme-toggle:hover {
         transform: translateY(-2px);
         border-color: var(--accent);
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
       }
-      .theme-toggle:active {
-        transform: scale(0.95);
-      }
-      .theme-toggle:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
+      .theme-toggle:active { transform: scale(0.95); }
+      .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
       /* ── Hero ── */
       .hero {
@@ -250,21 +300,17 @@
         transform: translateX(-50%);
         width: 900px;
         height: 500px;
-        background: radial-gradient(
-          50% 50% at 50% 50%,
-          rgba(88, 166, 255, 0.1),
-          transparent 70%
-        );
+        background: radial-gradient(50% 50% at 50% 50%, rgba(88, 166, 255, 0.1), transparent 70%);
         pointer-events: none;
       }
       .hero-inner {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1.15fr;
         gap: 3rem;
         align-items: center;
       }
       .hero-text h1 {
-        font-size: clamp(2.4rem, 1rem + 5vw, 4rem);
+        font-size: clamp(2.2rem, 1rem + 4.5vw, 3.6rem);
         font-weight: 800;
         letter-spacing: -0.035em;
         line-height: 1.08;
@@ -273,11 +319,25 @@
       }
       .hero-text .tagline {
         color: var(--text-secondary);
-        font-size: clamp(1rem, 0.9rem + 0.5vw, 1.2rem);
+        font-size: clamp(1rem, 0.9rem + 0.4vw, 1.15rem);
         margin: 1rem 0 0;
         max-width: 42ch;
         text-wrap: pretty;
         line-height: 1.55;
+      }
+      .hero-text .tool-count-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        font-family: var(--mono);
+        background: var(--accent-subtle);
+        color: var(--accent);
+        border: 1px solid var(--border);
+        margin-bottom: 1rem;
       }
       .hero-actions {
         display: flex;
@@ -285,7 +345,6 @@
         flex-wrap: wrap;
         margin-top: 1.8rem;
       }
-
       .btn {
         display: inline-flex;
         align-items: center;
@@ -298,149 +357,407 @@
         border: 1px solid transparent;
         cursor: pointer;
         font-family: var(--sans);
-        transition: transform 0.15s var(--ease), background 0.15s var(--ease),
-          border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+        transition: transform 0.15s var(--ease), background 0.15s var(--ease), border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
       }
-      .btn:hover {
-        transform: translateY(-1px);
-      }
-      .btn:active {
-        transform: scale(0.97);
-      }
-      .btn:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
-      .btn-primary {
-        background: var(--accent);
-        color: #fff;
-      }
-      .btn-primary:hover {
-        background: var(--accent-hover);
-        box-shadow: 0 4px 20px rgba(88, 166, 255, 0.2);
-      }
-      .btn-ghost {
-        border-color: var(--border);
-        color: var(--text);
-        background: var(--surface);
-      }
-      .btn-ghost:hover {
-        border-color: var(--border-hover);
-      }
+      .btn:hover { transform: translateY(-1px); }
+      .btn:active { transform: scale(0.97); }
+      .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .btn-primary { background: var(--accent); color: #fff; }
+      .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 20px rgba(88, 166, 255, 0.2); }
+      .btn-ghost { border-color: var(--border); color: var(--text); background: var(--surface); }
+      .btn-ghost:hover { border-color: var(--border-hover); }
 
-      /* ── Terminal ── */
-      .terminal {
+      /* ───────────────────────────────────── */
+      /* ── MOCK APP (hero right side)       ── */
+      /* ───────────────────────────────────── */
+      .mock-app {
         border-radius: 12px;
         overflow: hidden;
-        border: 1px solid var(--border);
-        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3),
-          0 0 0 1px rgba(88, 166, 255, 0.04);
+        border: 1px solid var(--mock-border);
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(88, 166, 255, 0.06);
+        background: var(--mock-bg);
+        font-family: var(--sans);
+        font-size: 0.72rem;
+        color: var(--mock-text);
+        height: 380px;
+        display: flex;
+        flex-direction: column;
       }
-      .terminal-bar {
+      /* Header bar */
+      .mock-header {
         display: flex;
         align-items: center;
-        gap: 6px;
-        padding: 0.6rem 0.9rem;
-        background: var(--surface);
-        border-bottom: 1px solid var(--border);
+        justify-content: space-between;
+        padding: 0 0.75rem;
+        height: 2.5rem;
+        min-height: 2.5rem;
+        background: var(--mock-surface);
+        border-bottom: 1px solid var(--mock-border);
       }
-      .terminal-dot {
+      .mock-header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .mock-logo-icon {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mock-logo-icon svg {
+        width: 16px;
+        height: 16px;
+        stroke: var(--mock-text);
+        fill: none;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .mock-app-title {
+        font-weight: 600;
+        font-size: 0.82rem;
+        color: var(--mock-text);
+      }
+      .mock-theme-btn {
+        width: 22px;
+        height: 22px;
+        border-radius: 4px;
+        border: 1px solid var(--mock-border);
+        background: var(--mock-nav);
+        display: grid;
+        place-items: center;
+      }
+      .mock-theme-btn svg {
+        width: 12px;
+        height: 12px;
+        stroke: var(--mock-text-dim);
+        fill: none;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      /* Body: sidebar + content */
+      .mock-body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+      /* Sidebar */
+      .mock-sidebar {
+        width: 140px;
+        min-width: 140px;
+        background: var(--mock-surface);
+        border-right: 1px solid var(--mock-border);
+        padding: 0.5rem;
+        overflow: hidden;
+      }
+      .mock-nav-group {
+        margin-bottom: 0.15rem;
+      }
+      .mock-nav-parent {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.4rem;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.72rem;
+        color: var(--mock-text);
+        cursor: default;
+      }
+      .mock-nav-parent svg {
+        width: 13px;
+        height: 13px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+      }
+      .mock-nav-children {
+        padding-left: 0.7rem;
+      }
+      .mock-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.65rem;
+        color: var(--mock-text-dim);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mock-nav-item.active {
+        background: var(--mock-hover);
+        color: var(--mock-accent);
+      }
+      .mock-nav-item svg {
+        width: 11px;
+        height: 11px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+      }
+      .mock-nav-collapsed .mock-nav-children {
+        display: none;
+      }
+      .mock-nav-collapsed .mock-chevron {
+        transform: rotate(-90deg);
+      }
+      .mock-chevron {
         width: 10px;
         height: 10px;
-        border-radius: 50%;
+        margin-left: auto;
+        transition: transform 0.2s var(--ease);
       }
-      .terminal-dot--r {
-        background: var(--terminal-dot-red);
-      }
-      .terminal-dot--y {
-        background: var(--terminal-dot-yellow);
-      }
-      .terminal-dot--g {
-        background: var(--terminal-dot-green);
-      }
-      .terminal-title {
+      /* Content area */
+      .mock-content {
         flex: 1;
-        text-align: center;
-        font-size: 0.72rem;
-        font-family: var(--mono);
-        color: var(--text-secondary);
-        letter-spacing: 0.02em;
-      }
-      .terminal-body {
-        background: var(--terminal-bg);
-        padding: 1rem 1.1rem;
-        min-height: 170px;
-        font-family: var(--mono);
-        font-size: 0.8rem;
-        line-height: 1.65;
-        color: #b4c0d4;
+        padding: 0.75rem;
+        overflow: hidden;
         position: relative;
+        background: var(--mock-bg);
       }
-      .terminal-body pre {
-        background: none;
-        border: none;
-        margin: 0;
-        padding: 0;
-        white-space: pre-wrap;
-        word-break: break-all;
-        color: inherit;
-        font: inherit;
+      .mock-content-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin: 0 0 0.15rem;
+        color: var(--mock-text);
       }
-      .t-prompt {
-        color: #3fb950;
-      }
-      .t-flag {
-        color: #79c0ff;
-      }
-      .t-str {
-        color: #a5d6ff;
-      }
-      .t-comment {
-        color: #546178;
-        font-style: italic;
-      }
-      .t-ok {
-        color: #3fb950;
-      }
-      .cursor {
-        display: inline-block;
-        width: 7px;
-        height: 15px;
-        background: var(--accent);
-        vertical-align: text-bottom;
-        margin-left: 1px;
-        animation: blink 0.8s step-end infinite;
-      }
-      @keyframes blink {
-        50% {
-          opacity: 0;
-        }
+      .mock-content-desc {
+        font-size: 0.62rem;
+        color: var(--mock-text-dim);
+        margin: 0 0 0.6rem;
       }
 
-      /* Terminal always dark — scoped syntax colors */
-      @media (prefers-color-scheme: light) {
-        .terminal-body {
-          --get-text: #3fb950;
-          --code-flag: #79c0ff;
-          --code-string: #a5d6ff;
-          --code-comment: #546178;
-        }
-        .code-block pre {
-          --code-flag: #79c0ff;
-          --code-string: #a5d6ff;
-          --code-comment: #546178;
-        }
+      /* Scene container + transitions */
+      .mock-scene {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 0.75rem;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        pointer-events: none;
       }
-      :root[data-theme='light'] .terminal-body {
-        --get-text: #3fb950;
-        --code-flag: #79c0ff;
-        --code-string: #a5d6ff;
-        --code-comment: #546178;
+      .mock-scene.active {
+        opacity: 1;
+        pointer-events: auto;
       }
-      :root[data-theme='light'] .code-block pre {
-        --code-flag: #79c0ff;
-        --code-string: #a5d6ff;
-        --code-comment: #546178;
+
+      /* Scene 1: Images to PDF with sortable grid */
+      .mock-dropzone {
+        border: 1.5px dashed var(--mock-border);
+        border-radius: 6px;
+        padding: 0.5rem;
+        text-align: center;
+        color: var(--mock-text-dim);
+        font-size: 0.6rem;
+        margin-bottom: 0.5rem;
+      }
+      .mock-thumb-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.35rem;
+      }
+      .mock-thumb {
+        position: relative;
+        border-radius: 4px;
+        border: 1px solid var(--mock-border);
+        background: var(--mock-nav);
+        aspect-ratio: 4 / 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+      }
+      .mock-thumb.dragging {
+        transform: scale(1.08) rotate(2deg);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        z-index: 2;
+        border-color: var(--mock-accent);
+      }
+      .mock-thumb-num {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--mock-accent);
+        color: #fff;
+        font-size: 0.5rem;
+        font-weight: 700;
+        display: grid;
+        place-items: center;
+        line-height: 1;
+      }
+      .mock-thumb-bar {
+        width: 60%;
+        height: 3px;
+        border-radius: 2px;
+        opacity: 0.5;
+      }
+
+      /* Scene 2: Before / After */
+      .mock-comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+      .mock-compare-col {
+        text-align: center;
+      }
+      .mock-compare-label {
+        font-size: 0.6rem;
+        color: var(--mock-text-dim);
+        margin-bottom: 0.3rem;
+      }
+      .mock-compare-img {
+        border-radius: 6px;
+        border: 1px solid var(--mock-border);
+        background: var(--mock-nav);
+        aspect-ratio: 4 / 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .mock-compare-img canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .mock-badge {
+        display: inline-block;
+        padding: 0.1rem 0.35rem;
+        border-radius: 3px;
+        font-size: 0.52rem;
+        font-weight: 600;
+        margin-top: 0.25rem;
+      }
+      .mock-badge-gray {
+        background: rgba(144, 146, 150, 0.15);
+        color: var(--mock-text-dim);
+      }
+      .mock-badge-blue {
+        background: rgba(34, 139, 230, 0.15);
+        color: #339af0;
+      }
+      .mock-badge-green {
+        background: rgba(81, 207, 102, 0.15);
+        color: #51cf66;
+      }
+
+      /* Scene 3: PDF preview with iframe mock */
+      .mock-pdf-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.4rem;
+      }
+      .mock-pdf-header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+      .mock-pdf-icon {
+        width: 14px;
+        height: 14px;
+      }
+      .mock-pdf-icon svg {
+        width: 14px;
+        height: 14px;
+        stroke: #ff6b6b;
+        fill: none;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .mock-pdf-title {
+        font-weight: 600;
+        font-size: 0.7rem;
+      }
+      .mock-download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        background: rgba(34, 139, 230, 0.12);
+        color: #339af0;
+        border: none;
+      }
+      .mock-download-btn svg {
+        width: 10px;
+        height: 10px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .mock-pdf-viewer {
+        border-radius: 6px;
+        border: 1px solid var(--mock-border);
+        background: #2c2e33;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 0.5rem;
+        gap: 0.35rem;
+        overflow: hidden;
+      }
+      .mock-pdf-page {
+        width: 65%;
+        background: #e8e8e8;
+        border-radius: 2px;
+        padding: 0.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
+      .mock-pdf-line {
+        height: 2px;
+        border-radius: 1px;
+        background: #c0c0c0;
+      }
+
+      /* Scene dots indicator */
+      .mock-dots {
+        position: absolute;
+        bottom: 0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 0.35rem;
+        z-index: 5;
+      }
+      .mock-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--mock-border);
+        transition: background 0.3s ease;
+      }
+      .mock-dot.active {
+        background: var(--mock-accent);
       }
 
       /* ── Sections ── */
@@ -464,6 +781,43 @@
         text-wrap: balance;
       }
 
+      /* ── How it works ── */
+      .how-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+      }
+      .how-step {
+        text-align: center;
+        padding: 1.5rem 1rem;
+      }
+      .how-icon {
+        width: 3rem;
+        height: 3rem;
+        margin: 0 auto 1rem;
+        border-radius: 12px;
+        background: var(--accent-subtle);
+        border: 1px solid var(--border);
+        display: grid;
+        place-items: center;
+        font-size: 1.3rem;
+      }
+      .how-step h3 {
+        margin: 0 0 0.3rem;
+        font-size: 1rem;
+        font-weight: 700;
+      }
+      .how-step p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.88rem;
+        max-width: 28ch;
+        margin-inline: auto;
+      }
+      .how-arrow {
+        display: none;
+      }
+
       /* ── Tool cards ── */
       .tool-grid {
         display: grid;
@@ -476,32 +830,19 @@
         border-left: 3px solid var(--border);
         border-radius: var(--radius);
         padding: 1.4rem 1.4rem 1.4rem 1.3rem;
-        transition: transform 0.2s var(--ease), border-color 0.25s var(--ease),
-          box-shadow 0.25s var(--ease);
+        transition: transform 0.2s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
       }
       .tool-card:hover {
         transform: translateY(-3px);
         border-color: var(--border-hover);
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
       }
-      .tool-card--pdf {
-        border-left-color: var(--cat-pdf);
-      }
-      .tool-card--pdf:hover {
-        border-left-color: var(--cat-pdf);
-      }
-      .tool-card--image {
-        border-left-color: var(--cat-image);
-      }
-      .tool-card--image:hover {
-        border-left-color: var(--cat-image);
-      }
-      .tool-card--text {
-        border-left-color: var(--cat-text);
-      }
-      .tool-card--text:hover {
-        border-left-color: var(--cat-text);
-      }
+      .tool-card--pdf { border-left-color: var(--cat-pdf); }
+      .tool-card--pdf:hover { border-left-color: var(--cat-pdf); }
+      .tool-card--image { border-left-color: var(--cat-image); }
+      .tool-card--image:hover { border-left-color: var(--cat-image); }
+      .tool-card--text { border-left-color: var(--cat-text); }
+      .tool-card--text:hover { border-left-color: var(--cat-text); }
       .tool-card h3 {
         margin: 0 0 0.2rem;
         font-size: 1.05rem;
@@ -509,9 +850,7 @@
         align-items: center;
         gap: 0.5rem;
       }
-      .tool-card h3 span {
-        font-size: 1.15rem;
-      }
+      .tool-card h3 span { font-size: 1.15rem; }
       .tool-count {
         font-size: 0.75rem;
         font-weight: 600;
@@ -523,9 +862,9 @@
         list-style: none;
         margin: 0;
         padding: 0;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.15rem 0.8rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
       }
       .tool-list li {
         font-size: 0.85rem;
@@ -534,6 +873,7 @@
         display: flex;
         align-items: center;
         gap: 0.35rem;
+        flex-wrap: wrap;
       }
       .tool-list li::before {
         content: '';
@@ -543,91 +883,95 @@
         background: var(--border-hover);
         flex-shrink: 0;
       }
+      .feat-badge {
+        display: inline-block;
+        padding: 0.08rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.62rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        line-height: 1.5;
+        white-space: nowrap;
+      }
+      .feat-drag { background: var(--feat-drag); color: var(--feat-drag-text); }
+      .feat-preview { background: var(--feat-preview); color: var(--feat-preview-text); }
+      .feat-visual { background: var(--feat-visual); color: var(--feat-visual-text); }
+      .feat-live { background: var(--feat-live); color: var(--feat-live-text); }
+      .feat-copy { background: var(--feat-copy); color: var(--feat-copy-text); }
 
-      /* ── Quick start ── */
-      .qs-grid {
+      /* ── Also an API ── */
+      .api-intro {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
+        gap: 2rem;
+        align-items: start;
+        margin-bottom: 2rem;
       }
-      .qs-card {
+      .api-intro-text h3 {
+        margin: 0 0 0.4rem;
+        font-size: 1.1rem;
+      }
+      .api-intro-text p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.55;
+      }
+      .terminal {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(88, 166, 255, 0.04);
+      }
+      .terminal-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.6rem 0.9rem;
         background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 1.4rem;
-        transition: border-color 0.2s var(--ease);
+        border-bottom: 1px solid var(--border);
       }
-      .qs-card:hover {
-        border-color: var(--border-hover);
+      .terminal-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
       }
-      .qs-card h3 {
-        margin: 0 0 0.3rem;
-        font-size: 0.98rem;
-        font-weight: 700;
-      }
-      .qs-card .qs-desc {
-        color: var(--text-secondary);
-        font-size: 0.85rem;
-        margin: 0 0 0.8rem;
-      }
-      .qs-cmd {
-        position: relative;
-        background: var(--terminal-bg);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 0.7rem 3rem 0.7rem 0.9rem;
-        font-family: var(--mono);
-        font-size: 0.82rem;
-        color: #b4c0d4;
-        overflow-x: auto;
-        white-space: pre;
-        line-height: 1.6;
-      }
-      .qs-copy {
-        position: absolute;
-        top: 0.45rem;
-        right: 0.45rem;
-        padding: 0.25rem 0.6rem;
-        border-radius: 5px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.06);
-        font-family: var(--sans);
+      .terminal-dot--r { background: var(--terminal-dot-red); }
+      .terminal-dot--y { background: var(--terminal-dot-yellow); }
+      .terminal-dot--g { background: var(--terminal-dot-green); }
+      .terminal-title {
+        flex: 1;
+        text-align: center;
         font-size: 0.72rem;
-        font-weight: 600;
-        color: #7d8da1;
-        cursor: pointer;
-        transition: background 0.15s var(--ease), color 0.15s var(--ease),
-          border-color 0.15s var(--ease);
-        min-height: 26px;
-      }
-      .qs-copy:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #b4c0d4;
-      }
-      .qs-copy:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
-      .qs-copy.copied {
-        color: #3fb950;
-        border-color: rgba(63, 185, 80, 0.3);
-      }
-      .qs-ports {
-        margin: 0.8rem 0 0;
-        font-size: 0.8rem;
+        font-family: var(--mono);
         color: var(--text-secondary);
+        letter-spacing: 0.02em;
       }
-      .qs-ports code {
+      .terminal-body {
+        background: var(--terminal-bg);
+        padding: 0.8rem 1rem;
         font-family: var(--mono);
         font-size: 0.76rem;
-        background: var(--accent-subtle);
-        border-radius: 4px;
-        padding: 0.1rem 0.35rem;
-        color: var(--accent);
-        font-weight: 500;
+        line-height: 1.65;
+        color: #b4c0d4;
       }
+      .terminal-body pre {
+        background: none;
+        border: none;
+        margin: 0;
+        padding: 0;
+        white-space: pre-wrap;
+        word-break: break-all;
+        color: inherit;
+        font: inherit;
+      }
+      .t-prompt { color: #3fb950; }
+      .t-flag { color: #79c0ff; }
+      .t-str { color: #a5d6ff; }
+      .t-comment { color: #546178; font-style: italic; }
+      .t-ok { color: #3fb950; }
 
-      /* ── Tabbed API explorer ── */
+      /* Tabbed API explorer */
       .tabs-bar {
         display: flex;
         gap: 0.25rem;
@@ -651,24 +995,11 @@
         transition: background 0.15s var(--ease), color 0.15s var(--ease);
         min-height: 40px;
       }
-      .tab-btn:hover {
-        color: var(--text);
-        background: var(--accent-subtle);
-      }
-      .tab-btn[aria-selected='true'] {
-        background: var(--accent);
-        color: #fff;
-      }
-      .tab-btn:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
-      .tab-panel {
-        display: none;
-      }
-      .tab-panel.active {
-        display: block;
-      }
+      .tab-btn:hover { color: var(--text); background: var(--accent-subtle); }
+      .tab-btn[aria-selected='true'] { background: var(--accent); color: #fff; }
+      .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .tab-panel { display: none; }
+      .tab-panel.active { display: block; }
 
       .tbl-wrap {
         overflow-x: auto;
@@ -696,12 +1027,8 @@
         padding: 0.55rem 1rem;
         border-bottom: 1px solid var(--border);
       }
-      tr:last-child td {
-        border-bottom: none;
-      }
-      td:first-child {
-        white-space: nowrap;
-      }
+      tr:last-child td { border-bottom: none; }
+      td:first-child { white-space: nowrap; }
       .ep-path {
         font-family: var(--mono);
         font-size: 0.82rem;
@@ -718,23 +1045,75 @@
         font-family: var(--mono);
         font-variant-numeric: tabular-nums;
       }
-      .method-post {
-        background: var(--post-bg);
-        color: var(--post-text);
+      .method-post { background: var(--post-bg); color: var(--post-text); }
+      .method-get { background: var(--get-bg); color: var(--get-text); }
+      td:last-child { color: var(--text-secondary); }
+
+      /* ── Quick Start ── */
+      .qs-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
       }
-      .method-get {
-        background: var(--get-bg);
-        color: var(--get-text);
+      .qs-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.4rem;
+        transition: border-color 0.2s var(--ease);
       }
-      td:last-child {
+      .qs-card:hover { border-color: var(--border-hover); }
+      .qs-card h3 { margin: 0 0 0.3rem; font-size: 0.98rem; font-weight: 700; }
+      .qs-card .qs-desc { color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 0.8rem; }
+      .qs-cmd {
+        position: relative;
+        background: var(--terminal-bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.7rem 3rem 0.7rem 0.9rem;
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        color: #b4c0d4;
+        overflow-x: auto;
+        white-space: pre;
+        line-height: 1.6;
+      }
+      .qs-copy {
+        position: absolute;
+        top: 0.45rem;
+        right: 0.45rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 5px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.06);
+        font-family: var(--sans);
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #7d8da1;
+        cursor: pointer;
+        transition: background 0.15s var(--ease), color 0.15s var(--ease), border-color 0.15s var(--ease);
+        min-height: 26px;
+      }
+      .qs-copy:hover { background: rgba(255, 255, 255, 0.1); color: #b4c0d4; }
+      .qs-copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .qs-copy.copied { color: #3fb950; border-color: rgba(63, 185, 80, 0.3); }
+      .qs-ports {
+        margin: 0.8rem 0 0;
+        font-size: 0.8rem;
         color: var(--text-secondary);
+      }
+      .qs-ports code {
+        font-family: var(--mono);
+        font-size: 0.76rem;
+        background: var(--accent-subtle);
+        border-radius: 4px;
+        padding: 0.1rem 0.35rem;
+        color: var(--accent);
+        font-weight: 500;
       }
 
       /* ── Architecture ── */
-      .arch-wrap {
-        display: flex;
-        justify-content: center;
-      }
+      .arch-wrap { display: flex; justify-content: center; }
       .arch-block {
         background: var(--terminal-bg);
         border: 1px solid var(--border);
@@ -754,32 +1133,14 @@
         border: none;
         padding: 0;
       }
-      .arch-block .a-box {
-        color: var(--accent);
-      }
-      .arch-block .a-label {
-        color: #e6edf3;
-        font-weight: 600;
-      }
-      .arch-block .a-port {
-        color: #7d8da1;
-      }
-      .arch-block .a-arrow {
-        color: var(--cat-image);
-      }
-      .arch-block .a-docker {
-        color: #79c0ff;
-      }
-
+      .a-box { color: var(--accent); }
+      .a-label { color: #e6edf3; font-weight: 600; }
+      .a-port { color: #7d8da1; }
+      .a-arrow { color: var(--cat-image); }
+      .a-docker { color: #79c0ff; }
       /* Arch block always dark */
-      @media (prefers-color-scheme: light) {
-        .arch-block {
-          background: #24292f;
-        }
-      }
-      :root[data-theme='light'] .arch-block {
-        background: #24292f;
-      }
+      @media (prefers-color-scheme: light) { .arch-block { background: #24292f; } }
+      :root[data-theme='light'] .arch-block { background: #24292f; }
 
       /* ── Footer ── */
       footer {
@@ -794,12 +1155,8 @@
         text-decoration: none;
         border-bottom: 1px solid var(--border);
       }
-      footer a:hover {
-        border-color: var(--accent);
-      }
-      footer p {
-        margin: 0.3rem 0;
-      }
+      footer a:hover { border-color: var(--accent); }
+      footer p { margin: 0.3rem 0; }
       .tech-badges {
         display: flex;
         flex-wrap: wrap;
@@ -835,131 +1192,218 @@
 
       /* ── Responsive ── */
       @media (max-width: 860px) {
-        .nav-label {
-          display: none;
-        }
-        .nav-btn {
-          padding: 0.5rem 0.6rem;
-        }
+        .nav-label { display: none; }
+        .nav-btn { padding: 0.5rem 0.6rem; }
         .hero-inner {
           grid-template-columns: 1fr;
           text-align: center;
         }
-        .hero-text .tagline {
-          margin-left: auto;
-          margin-right: auto;
-        }
-        .hero-actions {
-          justify-content: center;
-        }
-        .tool-grid {
-          grid-template-columns: 1fr;
-        }
-        .tool-list {
-          grid-template-columns: 1fr 1fr;
-        }
-        .qs-grid {
-          grid-template-columns: 1fr;
-        }
-        .tabs-bar {
-          width: 100%;
-        }
-        .tab-btn {
-          flex: 1;
-          text-align: center;
-        }
-        .arch-block {
-          padding: 1rem 1.2rem;
-        }
-        .arch-block pre {
-          font-size: 0.72rem;
-        }
+        .hero-text .tagline { margin-left: auto; margin-right: auto; }
+        .hero-text .tool-count-badge { margin-left: auto; margin-right: auto; }
+        .hero-actions { justify-content: center; }
+        .mock-app { max-width: 420px; margin: 0 auto; height: 340px; }
+        .mock-sidebar { width: 120px; min-width: 120px; }
+        .how-grid { grid-template-columns: 1fr; gap: 1rem; }
+        .tool-grid { grid-template-columns: 1fr; }
+        .api-intro { grid-template-columns: 1fr; }
+        .qs-grid { grid-template-columns: 1fr; }
+        .tabs-bar { width: 100%; }
+        .tab-btn { flex: 1; text-align: center; }
+        .arch-block { padding: 1rem 1.2rem; }
+        .arch-block pre { font-size: 0.72rem; }
+      }
+      @media (max-width: 540px) {
+        .mock-app { height: 300px; }
+        .mock-sidebar { display: none; }
+        .mock-thumb-grid { grid-template-columns: repeat(3, 1fr); }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        *,
-        *::before,
-        *::after {
+        *, *::before, *::after {
           animation-duration: 0s !important;
           transition-duration: 0s !important;
         }
-        html {
-          scroll-behavior: auto;
-        }
-        .reveal {
-          opacity: 1;
-          transform: none;
-        }
-        .cursor {
-          animation: none;
-          opacity: 1;
-        }
+        html { scroll-behavior: auto; }
+        .reveal { opacity: 1; transform: none; }
+      }
+
+      /* ── Mock app is always dark-themed ── */
+      @media (prefers-color-scheme: light) {
+        .mock-app { box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06); }
+      }
+      :root[data-theme='light'] .mock-app {
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
       }
     </style>
   </head>
   <body>
     <!-- Theme toggle -->
-    <button
-      class="theme-toggle"
-      id="themeToggle"
-      aria-label="Switch to light mode"
-      title="Toggle theme"
-    ></button>
+    <button class="theme-toggle" id="themeToggle" aria-label="Switch to light mode" title="Toggle theme"></button>
 
     <!-- Portfolio nav -->
     <nav class="nav-home" id="navHome" hidden aria-label="Back to portfolio">
-      <a
-        class="nav-btn"
-        id="navBack"
-        href="https://karantrehan3.github.io/"
-        rel="noopener"
-        aria-label="Back"
-        >&#8592; <span class="nav-label">Back</span></a
-      >
-      <a
-        class="nav-btn"
-        href="https://karantrehan3.github.io/"
-        rel="noopener"
-        aria-label="Home"
-        >&#8962; <span class="nav-label">Home</span></a
-      >
+      <a class="nav-btn" id="navBack" href="https://karantrehan3.github.io/" rel="noopener" aria-label="Back">&#8592; <span class="nav-label">Back</span></a>
+      <a class="nav-btn" href="https://karantrehan3.github.io/" rel="noopener" aria-label="Home">&#8962; <span class="nav-label">Home</span></a>
     </nav>
 
-    <!-- Hero -->
+    <!-- ════════ HERO ════════ -->
     <header class="hero">
       <div class="wrap">
         <div class="hero-inner">
           <div class="hero-text">
+            <div class="tool-count-badge">28 tools across PDF, Images, and Text</div>
             <h1>Python Utilities</h1>
-            <p class="tagline">
-              28 tools for PDF, image &amp; text processing. Full-stack app with
-              visual UI and REST API.
-            </p>
+            <p class="tagline">A full-stack toolkit with a visual browser UI and a REST API. Upload files, process them, preview results — no command line required.</p>
             <div class="hero-actions">
-              <a class="btn btn-primary" href="#quick-start"
-                >Open App &#8594;</a
-              >
-              <a
-                class="btn btn-ghost"
-                href="https://github.com/karantrehan3/python-utilities"
-                target="_blank"
-                rel="noopener"
-                >GitHub &#8599;</a
-              >
+              <a class="btn btn-primary" href="#quick-start">Get Started &#8594;</a>
+              <a class="btn btn-ghost" href="https://github.com/karantrehan3/python-utilities" target="_blank" rel="noopener">GitHub &#8599;</a>
             </div>
           </div>
-          <div class="hero-terminal">
-            <div class="terminal">
-              <div class="terminal-bar">
-                <span class="terminal-dot terminal-dot--r"></span>
-                <span class="terminal-dot terminal-dot--y"></span>
-                <span class="terminal-dot terminal-dot--g"></span>
-                <span class="terminal-title"
-                  >python-utilities &mdash; bash</span
-                >
+
+          <!-- ── Animated mock app ── -->
+          <div class="mock-app" role="img" aria-label="Preview of the Python Utilities app interface showing a sidebar with tool categories and an interactive content area">
+            <div class="mock-header">
+              <div class="mock-header-left">
+                <div class="mock-logo-icon">
+                  <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                </div>
+                <span class="mock-app-title">Python Utilities</span>
               </div>
-              <div class="terminal-body">
-                <pre id="termPre"></pre>
+              <div class="mock-theme-btn">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              </div>
+            </div>
+            <div class="mock-body">
+              <!-- Sidebar -->
+              <div class="mock-sidebar">
+                <!-- PDF group (expanded, "Images to PDF" active in scene 1) -->
+                <div class="mock-nav-group" id="mockNavPdf">
+                  <div class="mock-nav-parent">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    PDF
+                    <svg class="mock-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                  <div class="mock-nav-children" id="mockPdfChildren">
+                    <div class="mock-nav-item"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Unlock</div>
+                    <div class="mock-nav-item"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Protect</div>
+                    <div class="mock-nav-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Info</div>
+                    <div class="mock-nav-item"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Merge</div>
+                    <div class="mock-nav-item active" id="mockNavActive1"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Images to PDF</div>
+                    <div class="mock-nav-item"><svg viewBox="0 0 24 24"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg> Compress</div>
+                  </div>
+                </div>
+                <!-- Images group (collapsed / expanded for scene 2) -->
+                <div class="mock-nav-group mock-nav-collapsed" id="mockNavImages">
+                  <div class="mock-nav-parent">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    Images
+                    <svg class="mock-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                  <div class="mock-nav-children" id="mockImageChildren">
+                    <div class="mock-nav-item"><svg viewBox="0 0 24 24"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg> Resize</div>
+                    <div class="mock-nav-item active" id="mockNavActive2"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Convert</div>
+                    <div class="mock-nav-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Info</div>
+                  </div>
+                </div>
+                <!-- Text group (collapsed / expanded for scene 3) -->
+                <div class="mock-nav-group mock-nav-collapsed" id="mockNavText">
+                  <div class="mock-nav-parent">
+                    <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                    Text
+                    <svg class="mock-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                  <div class="mock-nav-children" id="mockTextChildren">
+                    <div class="mock-nav-item"><svg viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg> Hash</div>
+                    <div class="mock-nav-item"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Encode</div>
+                    <div class="mock-nav-item active" id="mockNavActive3"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Regex Tester</div>
+                    <div class="mock-nav-item"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> JSON Format</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Content area with 3 cycling scenes -->
+              <div class="mock-content">
+                <!-- Scene 1: Images to PDF -->
+                <div class="mock-scene active" id="mockScene1">
+                  <div class="mock-content-title">Images to PDF</div>
+                  <div class="mock-content-desc">Drag thumbnails to reorder pages</div>
+                  <div class="mock-dropzone">Drop images here or click to browse</div>
+                  <div class="mock-thumb-grid" id="mockThumbs">
+                    <div class="mock-thumb" id="mockThumb1">
+                      <div class="mock-thumb-num">1</div>
+                      <div class="mock-thumb-bar" style="background:#e06666"></div>
+                    </div>
+                    <div class="mock-thumb" id="mockThumb2">
+                      <div class="mock-thumb-num">2</div>
+                      <div class="mock-thumb-bar" style="background:#6fa8dc"></div>
+                    </div>
+                    <div class="mock-thumb" id="mockThumb3">
+                      <div class="mock-thumb-num">3</div>
+                      <div class="mock-thumb-bar" style="background:#93c47d"></div>
+                    </div>
+                    <div class="mock-thumb" id="mockThumb4">
+                      <div class="mock-thumb-num">4</div>
+                      <div class="mock-thumb-bar" style="background:#f6b26b"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Scene 2: Before / After comparison -->
+                <div class="mock-scene" id="mockScene2">
+                  <div class="mock-content-title">Convert Image</div>
+                  <div class="mock-content-desc">Before / After</div>
+                  <div class="mock-comparison">
+                    <div class="mock-compare-col">
+                      <div class="mock-compare-label">Original</div>
+                      <div class="mock-compare-img">
+                        <canvas id="mockCanvasOrig" width="180" height="120"></canvas>
+                      </div>
+                      <span class="mock-badge mock-badge-gray">PNG</span>
+                      <span class="mock-badge mock-badge-gray">2048 x 1536</span>
+                    </div>
+                    <div class="mock-compare-col">
+                      <div class="mock-compare-label">Converted</div>
+                      <div class="mock-compare-img">
+                        <canvas id="mockCanvasConv" width="180" height="120"></canvas>
+                      </div>
+                      <span class="mock-badge mock-badge-green">WEBP</span>
+                      <span class="mock-badge mock-badge-blue">800 x 600</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Scene 3: Regex Tester with matches -->
+                <div class="mock-scene" id="mockScene3">
+                  <div class="mock-content-title">Regex Tester</div>
+                  <div class="mock-content-desc">Test patterns and see all matches</div>
+                  <div style="margin-bottom:0.4rem">
+                    <div style="display:flex;gap:0.3rem;margin-bottom:0.3rem">
+                      <div style="flex:1;border:1px solid var(--mock-border);border-radius:4px;padding:0.25rem 0.4rem;font-family:var(--mono);font-size:0.6rem;color:var(--mock-accent);background:var(--mock-nav)">\b[A-Z][a-z]+\b</div>
+                      <div style="width:2.5rem;border:1px solid var(--mock-border);border-radius:4px;padding:0.25rem 0.4rem;font-family:var(--mono);font-size:0.6rem;color:var(--mock-text-dim);background:var(--mock-nav);text-align:center">gi</div>
+                    </div>
+                    <div style="border:1px solid var(--mock-border);border-radius:4px;padding:0.25rem 0.4rem;font-size:0.58rem;color:var(--mock-text-dim);background:var(--mock-nav);line-height:1.5">The <span style="background:rgba(34,139,230,0.25);border-radius:2px;padding:0 1px;color:#74c0fc">Quick</span> <span style="background:rgba(34,139,230,0.25);border-radius:2px;padding:0 1px;color:#74c0fc">Brown</span> <span style="background:rgba(34,139,230,0.25);border-radius:2px;padding:0 1px;color:#74c0fc">Fox</span> jumps over the <span style="background:rgba(34,139,230,0.25);border-radius:2px;padding:0 1px;color:#74c0fc">Lazy</span> <span style="background:rgba(34,139,230,0.25);border-radius:2px;padding:0 1px;color:#74c0fc">Dog</span></div>
+                  </div>
+                  <div style="border:1px solid var(--mock-border);border-radius:4px;padding:0.35rem 0.4rem;background:var(--mock-surface)">
+                    <div style="display:flex;align-items:center;gap:0.3rem;margin-bottom:0.3rem">
+                      <span style="font-size:0.62rem;font-weight:600">Matches</span>
+                      <span class="mock-badge mock-badge-blue">5 matches</span>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:0.2rem">
+                      <div style="padding:0.15rem 0.35rem;border:1px solid var(--mock-border);border-radius:3px;font-family:var(--mono);font-size:0.55rem;color:var(--mock-text)">Quick <span style="color:var(--mock-text-dim)">[4:9]</span></div>
+                      <div style="padding:0.15rem 0.35rem;border:1px solid var(--mock-border);border-radius:3px;font-family:var(--mono);font-size:0.55rem;color:var(--mock-text)">Brown <span style="color:var(--mock-text-dim)">[10:15]</span></div>
+                      <div style="padding:0.15rem 0.35rem;border:1px solid var(--mock-border);border-radius:3px;font-family:var(--mono);font-size:0.55rem;color:var(--mock-text)">Fox <span style="color:var(--mock-text-dim)">[16:19]</span></div>
+                      <div style="padding:0.15rem 0.35rem;border:1px solid var(--mock-border);border-radius:3px;font-family:var(--mono);font-size:0.55rem;color:var(--mock-text)">Lazy <span style="color:var(--mock-text-dim)">[35:39]</span></div>
+                      <div style="padding:0.15rem 0.35rem;border:1px solid var(--mock-border);border-radius:3px;font-family:var(--mono);font-size:0.55rem;color:var(--mock-text)">Dog <span style="color:var(--mock-text-dim)">[40:43]</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Scene dots -->
+                <div class="mock-dots">
+                  <div class="mock-dot active" id="mockDot1"></div>
+                  <div class="mock-dot" id="mockDot2"></div>
+                  <div class="mock-dot" id="mockDot3"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -968,7 +1412,32 @@
     </header>
 
     <main>
-      <!-- Tools -->
+      <!-- ════════ HOW IT WORKS ════════ -->
+      <section id="how" class="reveal" aria-labelledby="how-heading">
+        <div class="wrap">
+          <p class="section-label">How it works</p>
+          <h2 id="how-heading">Three steps, any file type</h2>
+          <div class="how-grid">
+            <div class="how-step">
+              <div class="how-icon">&#128194;</div>
+              <h3>Upload</h3>
+              <p>Drag files onto the page or click to browse. Supports PDFs, images, and text.</p>
+            </div>
+            <div class="how-step">
+              <div class="how-icon">&#9881;&#65039;</div>
+              <h3>Process</h3>
+              <p>Choose your operation and settings. The FastAPI backend handles the heavy lifting.</p>
+            </div>
+            <div class="how-step">
+              <div class="how-icon">&#128064;</div>
+              <h3>Preview &amp; Download</h3>
+              <p>See results inline — PDF previews, before/after comparisons, compression stats — then download.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ 28 TOOLS ════════ -->
       <section id="tools" class="reveal" aria-labelledby="tools-heading">
         <div class="wrap">
           <p class="section-label">Capabilities</p>
@@ -987,19 +1456,19 @@
                 <li>Rotate Pages</li>
                 <li>Add Watermark</li>
                 <li>Add Page Numbers</li>
-                <li>Images to PDF</li>
+                <li>Images to PDF <span class="feat-badge feat-drag">drag-to-reorder</span></li>
                 <li>PDF to Images</li>
-                <li>Compress</li>
+                <li>Compress <span class="feat-badge feat-preview">live stats</span></li>
               </ul>
             </div>
             <div class="tool-card tool-card--image">
               <h3><span>&#128248;</span> Images</h3>
               <p class="tool-count">7 tools</p>
               <ul class="tool-list">
-                <li>Resize</li>
+                <li>Resize <span class="feat-badge feat-visual">visual resize</span></li>
                 <li>Crop</li>
                 <li>Rotate / Flip</li>
-                <li>Convert Format</li>
+                <li>Convert <span class="feat-badge feat-preview">before/after</span></li>
                 <li>Compress</li>
                 <li>Adjust</li>
                 <li>Info</li>
@@ -1010,10 +1479,10 @@
               <p class="tool-count">9 tools</p>
               <ul class="tool-list">
                 <li>Hash</li>
-                <li>Encode</li>
+                <li>Encode <span class="feat-badge feat-copy">copy-to-clipboard</span></li>
                 <li>Decode</li>
-                <li>Diff</li>
-                <li>Regex Tester</li>
+                <li>Diff <span class="feat-badge feat-live">live diff</span></li>
+                <li>Regex Tester <span class="feat-badge feat-live">live matching</span></li>
                 <li>JSON Format</li>
                 <li>JSON Minify</li>
                 <li>CSV&#8596;JSON</li>
@@ -1024,372 +1493,126 @@
         </div>
       </section>
 
-      <!-- Quick Start -->
-      <section
-        id="quick-start"
-        class="reveal"
-        aria-labelledby="qs-heading"
-      >
+      <!-- ════════ ALSO AN API ════════ -->
+      <section id="api" class="reveal" aria-labelledby="api-heading">
+        <div class="wrap">
+          <p class="section-label">API Reference</p>
+          <h2 id="api-heading">Also a REST API</h2>
+          <div class="api-intro">
+            <div class="api-intro-text">
+              <h3>Every tool is an endpoint</h3>
+              <p>The same backend that powers the UI is exposed as a standard REST API. Use curl, Postman, or any HTTP client. Full Swagger docs ship at <code style="font-family:var(--mono);font-size:0.85rem;background:var(--accent-subtle);border-radius:4px;padding:0.1rem 0.35rem;color:var(--accent)">/docs</code>.</p>
+            </div>
+            <div class="terminal">
+              <div class="terminal-bar">
+                <span class="terminal-dot terminal-dot--r"></span>
+                <span class="terminal-dot terminal-dot--y"></span>
+                <span class="terminal-dot terminal-dot--g"></span>
+                <span class="terminal-title">bash</span>
+              </div>
+              <div class="terminal-body">
+                <pre><span class="t-prompt">$</span> curl <span class="t-flag">-X POST</span> localhost:4001/api/v1/pdf/merge \
+    <span class="t-flag">-F</span> <span class="t-str">"files=@doc1.pdf"</span> <span class="t-flag">-F</span> <span class="t-str">"files=@doc2.pdf"</span> \
+    <span class="t-flag">-o</span> merged.pdf
+
+<span class="t-ok">&#10003; 200 OK &#8212; merged.pdf (340 KB, 8 pages)</span></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabbed endpoint tables -->
+          <div class="tabs-bar" role="tablist" aria-label="API category">
+            <button class="tab-btn" role="tab" aria-selected="true" aria-controls="panel-pdf" id="tab-pdf">PDF</button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-image" id="tab-image">Images</button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-text" id="tab-text">Text</button>
+          </div>
+
+          <div id="panel-pdf" class="tab-panel active" role="tabpanel" aria-labelledby="tab-pdf">
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td class="ep-path">/unlock</td><td><span class="method-badge method-post">POST</span></td><td>Unlock a password-protected PDF</td></tr>
+                  <tr><td class="ep-path">/protect</td><td><span class="method-badge method-post">POST</span></td><td>Add password protection</td></tr>
+                  <tr><td class="ep-path">/info</td><td><span class="method-badge method-post">POST</span></td><td>Get page count, encryption status, metadata</td></tr>
+                  <tr><td class="ep-path">/subset</td><td><span class="method-badge method-post">POST</span></td><td>Extract a page range</td></tr>
+                  <tr><td class="ep-path">/split</td><td><span class="method-badge method-post">POST</span></td><td>Split into individual pages (ZIP)</td></tr>
+                  <tr><td class="ep-path">/merge</td><td><span class="method-badge method-post">POST</span></td><td>Merge multiple PDFs</td></tr>
+                  <tr><td class="ep-path">/rotate</td><td><span class="method-badge method-post">POST</span></td><td>Rotate pages by 90/180/270&deg;</td></tr>
+                  <tr><td class="ep-path">/watermark</td><td><span class="method-badge method-post">POST</span></td><td>Add text watermark</td></tr>
+                  <tr><td class="ep-path">/add-page-numbers</td><td><span class="method-badge method-post">POST</span></td><td>Stamp page numbers</td></tr>
+                  <tr><td class="ep-path">/from-images</td><td><span class="method-badge method-post">POST</span></td><td>Convert images to PDF</td></tr>
+                  <tr><td class="ep-path">/to-images</td><td><span class="method-badge method-post">POST</span></td><td>Convert pages to images (ZIP)</td></tr>
+                  <tr><td class="ep-path">/compress</td><td><span class="method-badge method-post">POST</span></td><td>Compress a PDF</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="panel-image" class="tab-panel" role="tabpanel" aria-labelledby="tab-image">
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td class="ep-path">/resize/file</td><td><span class="method-badge method-post">POST</span></td><td>Resize with aspect ratio control</td></tr>
+                  <tr><td class="ep-path">/crop/file</td><td><span class="method-badge method-post">POST</span></td><td>Crop to coordinates</td></tr>
+                  <tr><td class="ep-path">/rotate/file</td><td><span class="method-badge method-post">POST</span></td><td>Rotate and flip</td></tr>
+                  <tr><td class="ep-path">/convert/file</td><td><span class="method-badge method-post">POST</span></td><td>Convert between formats</td></tr>
+                  <tr><td class="ep-path">/compress/file</td><td><span class="method-badge method-post">POST</span></td><td>Reduce file size</td></tr>
+                  <tr><td class="ep-path">/adjust/file</td><td><span class="method-badge method-post">POST</span></td><td>Brightness, contrast, saturation</td></tr>
+                  <tr><td class="ep-path">/info/file</td><td><span class="method-badge method-post">POST</span></td><td>Get dimensions and metadata</td></tr>
+                  <tr><td class="ep-path">/formats</td><td><span class="method-badge method-get">GET</span></td><td>List supported formats</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="panel-text" class="tab-panel" role="tabpanel" aria-labelledby="tab-text">
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td class="ep-path">/hash</td><td><span class="method-badge method-post">POST</span></td><td>Hash text (MD5, SHA-256, etc.)</td></tr>
+                  <tr><td class="ep-path">/encode</td><td><span class="method-badge method-post">POST</span></td><td>Base64/URL/HTML encode</td></tr>
+                  <tr><td class="ep-path">/decode</td><td><span class="method-badge method-post">POST</span></td><td>Base64/URL/HTML decode</td></tr>
+                  <tr><td class="ep-path">/diff</td><td><span class="method-badge method-post">POST</span></td><td>Compare two texts</td></tr>
+                  <tr><td class="ep-path">/regex</td><td><span class="method-badge method-post">POST</span></td><td>Test regex patterns</td></tr>
+                  <tr><td class="ep-path">/json/format</td><td><span class="method-badge method-post">POST</span></td><td>Pretty-print JSON</td></tr>
+                  <tr><td class="ep-path">/json/minify</td><td><span class="method-badge method-post">POST</span></td><td>Minify JSON</td></tr>
+                  <tr><td class="ep-path">/csv-json</td><td><span class="method-badge method-post">POST</span></td><td>Convert CSV&#8596;JSON</td></tr>
+                  <tr><td class="ep-path">/generate</td><td><span class="method-badge method-post">POST</span></td><td>Generate UUIDs or Lorem ipsum</td></tr>
+                  <tr><td class="ep-path">/algorithms</td><td><span class="method-badge method-get">GET</span></td><td>List hash algorithms</td></tr>
+                  <tr><td class="ep-path">/encodings</td><td><span class="method-badge method-get">GET</span></td><td>List encoding types</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ QUICK START ════════ -->
+      <section id="quick-start" class="reveal" aria-labelledby="qs-heading">
         <div class="wrap">
           <p class="section-label">Get Started</p>
           <h2 id="qs-heading">Quick Start</h2>
           <div class="qs-grid">
             <div class="qs-card">
               <h3>&#128051; Docker</h3>
-              <p class="qs-desc">
-                Build and start both services with one command.
-              </p>
-              <div class="qs-cmd">make start<button
-                  class="qs-copy"
-                  data-copy="make start"
-                  aria-label="Copy Docker command"
-                >Copy</button></div>
-              <p class="qs-ports">
-                UI at <code>localhost:4002</code> &middot; API at
-                <code>localhost:4001</code>
-              </p>
+              <p class="qs-desc">Build and start both services with one command.</p>
+              <div class="qs-cmd">make start<button class="qs-copy" data-copy="make start" aria-label="Copy Docker command">Copy</button></div>
+              <p class="qs-ports">UI at <code>localhost:4002</code> &middot; API at <code>localhost:4001</code></p>
             </div>
             <div class="qs-card">
               <h3>&#128187; Local Dev</h3>
-              <p class="qs-desc">
-                Install dependencies and start with hot-reload.
-              </p>
-              <div class="qs-cmd">make install &amp;&amp; make dev<button
-                  class="qs-copy"
-                  data-copy="make install && make dev"
-                  aria-label="Copy local dev command"
-                >Copy</button></div>
-              <p class="qs-ports">
-                UI at <code>localhost:4002</code> &middot; API at
-                <code>localhost:4001</code>
-              </p>
+              <p class="qs-desc">Install dependencies and start with hot-reload.</p>
+              <div class="qs-cmd">make install &amp;&amp; make dev<button class="qs-copy" data-copy="make install && make dev" aria-label="Copy local dev command">Copy</button></div>
+              <p class="qs-ports">UI at <code>localhost:3000</code> &middot; API at <code>localhost:4001</code></p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- API Explorer -->
-      <section id="api" class="reveal" aria-labelledby="api-heading">
-        <div class="wrap">
-          <p class="section-label">API Reference</p>
-          <h2 id="api-heading">Every endpoint at a glance</h2>
-          <div
-            class="tabs-bar"
-            role="tablist"
-            aria-label="API category"
-          >
-            <button
-              class="tab-btn"
-              role="tab"
-              aria-selected="true"
-              aria-controls="panel-pdf"
-              id="tab-pdf"
-            >
-              PDF
-            </button>
-            <button
-              class="tab-btn"
-              role="tab"
-              aria-selected="false"
-              aria-controls="panel-image"
-              id="tab-image"
-            >
-              Images
-            </button>
-            <button
-              class="tab-btn"
-              role="tab"
-              aria-selected="false"
-              aria-controls="panel-text"
-              id="tab-text"
-            >
-              Text
-            </button>
-          </div>
-
-          <div
-            id="panel-pdf"
-            class="tab-panel active"
-            role="tabpanel"
-            aria-labelledby="tab-pdf"
-          >
-            <div class="tbl-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Endpoint</th>
-                    <th>Method</th>
-                    <th>Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="ep-path">/unlock</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Unlock a password-protected PDF</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/protect</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Add password protection</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/info</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Get page count, encryption status, metadata</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/subset</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Extract a page range</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/split</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Split into individual pages (ZIP)</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/merge</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Merge multiple PDFs</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/rotate</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Rotate pages by 90/180/270&deg;</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/watermark</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Add text watermark</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/add-page-numbers</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Stamp page numbers</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/from-images</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Convert images to PDF</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/to-images</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Convert pages to images (ZIP)</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/compress</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Compress a PDF</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div
-            id="panel-image"
-            class="tab-panel"
-            role="tabpanel"
-            aria-labelledby="tab-image"
-          >
-            <div class="tbl-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Endpoint</th>
-                    <th>Method</th>
-                    <th>Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="ep-path">/resize/file</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Resize with aspect ratio control</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/crop/file</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Crop to coordinates</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/rotate/file</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Rotate and flip</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/convert/file</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Convert between formats</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/compress/file</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Reduce file size</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/adjust/file</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Brightness, contrast, saturation</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/info/file</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Get dimensions and metadata</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/formats</td>
-                    <td>
-                      <span class="method-badge method-get">GET</span>
-                    </td>
-                    <td>List supported formats</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div
-            id="panel-text"
-            class="tab-panel"
-            role="tabpanel"
-            aria-labelledby="tab-text"
-          >
-            <div class="tbl-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Endpoint</th>
-                    <th>Method</th>
-                    <th>Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="ep-path">/hash</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Hash text (MD5, SHA-256, etc.)</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/encode</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Base64/URL/HTML encode</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/decode</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Base64/URL/HTML decode</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/diff</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Compare two texts</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/regex</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Test regex patterns</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/json/format</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Pretty-print JSON</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/json/minify</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Minify JSON</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/csv-json</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Convert CSV&#8596;JSON</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/generate</td>
-                    <td>
-                      <span class="method-badge method-post">POST</span>
-                    </td>
-                    <td>Generate UUIDs or Lorem ipsum</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/algorithms</td>
-                    <td>
-                      <span class="method-badge method-get">GET</span>
-                    </td>
-                    <td>List hash algorithms</td>
-                  </tr>
-                  <tr>
-                    <td class="ep-path">/encodings</td>
-                    <td>
-                      <span class="method-badge method-get">GET</span>
-                    </td>
-                    <td>List encoding types</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Architecture -->
+      <!-- ════════ ARCHITECTURE ════════ -->
       <section id="architecture" class="reveal" aria-labelledby="arch-heading">
         <div class="wrap">
           <p class="section-label">Architecture</p>
@@ -1399,7 +1622,7 @@
               <pre><span class="a-box">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>     <span class="a-box">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
 <span class="a-box">&#9474;</span>   <span class="a-label">client/</span>   <span class="a-box">&#9474;</span> <span class="a-arrow">&#9472;&#9472;&#9654;</span> <span class="a-box">&#9474;</span>   <span class="a-label">server/</span>    <span class="a-box">&#9474;</span>
 <span class="a-box">&#9474;</span>  <span class="a-port">React+Vite</span> <span class="a-box">&#9474;</span>     <span class="a-box">&#9474;</span>   <span class="a-port">FastAPI</span>    <span class="a-box">&#9474;</span>
-<span class="a-box">&#9474;</span>  <span class="a-port">Port 4002</span>  <span class="a-box">&#9474;</span>     <span class="a-box">&#9474;</span>   <span class="a-port">Port 4001</span>   <span class="a-box">&#9474;</span>
+<span class="a-box">&#9474;</span>  <span class="a-port">Port 3000</span>  <span class="a-box">&#9474;</span>     <span class="a-box">&#9474;</span>   <span class="a-port">Port 4001</span>   <span class="a-box">&#9474;</span>
 <span class="a-box">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span>     <span class="a-box">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span>
         <span class="a-docker">&#9492;&#9472;&#9472;&#9472; Docker Compose &#9472;&#9472;&#9472;&#9496;</span></pre>
             </div>
@@ -1411,27 +1634,17 @@
     <footer>
       <div class="wrap">
         <div class="tech-badges">
-          <span class="tech-badge">Python</span>
+          <span class="tech-badge">Python 3.13</span>
           <span class="tech-badge">FastAPI</span>
-          <span class="tech-badge">React</span>
+          <span class="tech-badge">React 19</span>
           <span class="tech-badge">TypeScript</span>
+          <span class="tech-badge">Mantine v7</span>
           <span class="tech-badge">Docker</span>
-          <span class="tech-badge">Mantine</span>
         </div>
         <p>
-          <a
-            href="https://github.com/karantrehan3/python-utilities"
-            target="_blank"
-            rel="noopener"
-            >GitHub</a
-          >
+          <a href="https://github.com/karantrehan3/python-utilities" target="_blank" rel="noopener">GitHub</a>
           &middot;
-          <a
-            href="https://github.com/karantrehan3/python-utilities/blob/master/LICENSE"
-            target="_blank"
-            rel="noopener"
-            >MIT License</a
-          >
+          <a href="https://github.com/karantrehan3/python-utilities/blob/master/LICENSE" target="_blank" rel="noopener">MIT License</a>
         </p>
         <p>&copy; 2026 Karan Trehan</p>
       </div>
@@ -1444,17 +1657,12 @@
         function getEffectiveTheme() {
           var explicit = document.documentElement.getAttribute('data-theme');
           if (explicit) return explicit;
-          return window.matchMedia('(prefers-color-scheme: light)').matches
-            ? 'light'
-            : 'dark';
+          return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
         }
         function updateToggleIcon() {
           var theme = getEffectiveTheme();
           themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
-          themeToggle.setAttribute(
-            'aria-label',
-            theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
-          );
+          themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
         }
         themeToggle.addEventListener('click', function () {
           var next = getEffectiveTheme() === 'dark' ? 'light' : 'dark';
@@ -1465,138 +1673,153 @@
         updateToggleIcon();
 
         /* ── Portfolio nav ── */
-        if (
-          new URLSearchParams(location.search).get('ref') === 'portfolio'
-        ) {
+        if (new URLSearchParams(location.search).get('ref') === 'portfolio') {
           var nav = document.getElementById('navHome');
           if (nav) nav.removeAttribute('hidden');
           document.body.classList.add('has-nav');
           var back = document.getElementById('navBack');
-          if (back)
-            back.addEventListener('click', function (e) {
-              if (document.referrer && history.length > 1) {
-                e.preventDefault();
-                history.back();
-              }
-            });
+          if (back) back.addEventListener('click', function (e) {
+            if (document.referrer && history.length > 1) { e.preventDefault(); history.back(); }
+          });
         }
 
-        /* ── Terminal typing animation ── */
-        var demos = [
-          {
-            lines: [
-              { type: 'prompt', text: '$ ' },
-              {
-                type: 'cmd',
-                text: 'curl -X POST localhost:4001/api/v1/pdf/merge \\\n    -F "files=@doc1.pdf" -F "files=@doc2.pdf" \\\n    -o merged.pdf',
-              },
-              { type: 'blank' },
-              {
-                type: 'response',
-                text: '✓ 200 OK — merged.pdf (340 KB, 8 pages)',
-              },
-            ],
-          },
-          {
-            lines: [
-              { type: 'prompt', text: '$ ' },
-              {
-                type: 'cmd',
-                text: 'curl -X POST localhost:4001/api/v1/image/resize/file \\\n    -F "file=@photo.png" -F "width=800" -F "height=600"',
-              },
-              { type: 'blank' },
-              {
-                type: 'response',
-                text: '✓ 200 OK — resized to 800×600',
-              },
-            ],
-          },
-          {
-            lines: [
-              { type: 'prompt', text: '$ ' },
-              {
-                type: 'cmd',
-                text: "curl -X POST localhost:4001/api/v1/text/hash \\\n    -H \"Content-Type: application/json\" \\\n    -d '{\"text\": \"hello\", \"algorithm\": \"sha256\"}'",
-              },
-              { type: 'blank' },
-              {
-                type: 'response',
-                text: '{"hash":"2cf24dba5fb0a30e26e83b2ac5b9e29e…"}',
-              },
-            ],
-          },
+        /* ── Mock app scene cycling ── */
+        var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var scenes = [
+          document.getElementById('mockScene1'),
+          document.getElementById('mockScene2'),
+          document.getElementById('mockScene3')
         ];
+        var dots = [
+          document.getElementById('mockDot1'),
+          document.getElementById('mockDot2'),
+          document.getElementById('mockDot3')
+        ];
+        var navGroups = {
+          pdf: document.getElementById('mockNavPdf'),
+          images: document.getElementById('mockNavImages'),
+          text: document.getElementById('mockNavText')
+        };
+        var activeItems = [
+          document.getElementById('mockNavActive1'),
+          document.getElementById('mockNavActive2'),
+          document.getElementById('mockNavActive3')
+        ];
+        var currentScene = 0;
 
-        var pre = document.getElementById('termPre');
-        var demoIdx = 0;
-        var reduceMotion = window.matchMedia(
-          '(prefers-reduced-motion: reduce)'
-        ).matches;
-
-        function runDemo() {
-          var demo = demos[demoIdx];
-          demoIdx = (demoIdx + 1) % demos.length;
-          pre.innerHTML = '';
-          var lineIdx = 0;
-
-          function nextLine() {
-            if (lineIdx >= demo.lines.length) {
-              setTimeout(function () {
-                pre.style.opacity = '1';
-                runDemo();
-              }, 2800);
-              return;
+        function showScene(idx) {
+          scenes.forEach(function (s, i) {
+            s.classList.toggle('active', i === idx);
+          });
+          dots.forEach(function (d, i) {
+            d.classList.toggle('active', i === idx);
+          });
+          /* Update sidebar to match */
+          var groups = ['pdf', 'images', 'text'];
+          groups.forEach(function (g, i) {
+            if (i === idx) {
+              navGroups[g].classList.remove('mock-nav-collapsed');
+            } else {
+              navGroups[g].classList.add('mock-nav-collapsed');
             }
-            var line = demo.lines[lineIdx++];
-            if (line.type === 'blank') {
-              pre.appendChild(document.createTextNode('\n'));
-              nextLine();
-            } else if (line.type === 'prompt') {
-              var sp = document.createElement('span');
-              sp.className = 't-prompt';
-              sp.textContent = line.text;
-              pre.appendChild(sp);
-              nextLine();
-            } else if (line.type === 'cmd') {
-              if (reduceMotion) {
-                pre.appendChild(
-                  document.createTextNode(line.text + '\n')
-                );
-                nextLine();
-                return;
-              }
-              var chars = line.text.split('');
-              var ci = 0;
-              var cursor = document.createElement('span');
-              cursor.className = 'cursor';
-              pre.appendChild(cursor);
-              function typeChar() {
-                if (ci >= chars.length) {
-                  cursor.remove();
-                  pre.appendChild(document.createTextNode('\n'));
-                  nextLine();
-                  return;
-                }
-                cursor.before(document.createTextNode(chars[ci++]));
-                setTimeout(typeChar, 18 + Math.random() * 14);
-              }
-              typeChar();
-            } else if (line.type === 'response') {
-              var sp = document.createElement('span');
-              sp.className = 't-ok';
-              sp.textContent = line.text + '\n';
-              sp.style.opacity = '0';
-              pre.appendChild(sp);
-              setTimeout(function () {
-                sp.style.transition = 'opacity .3s';
-                sp.style.opacity = '1';
-              }, 120);
-              setTimeout(nextLine, 200);
-            }
-          }
-          nextLine();
+          });
+          activeItems.forEach(function (a, i) {
+            if (a) a.classList.toggle('active', i === idx);
+          });
         }
-        runDemo();
+
+        /* Drag animation for scene 1 thumbnails */
+        var thumb2 = document.getElementById('mockThumb2');
+        var thumb3 = document.getElementById('mockThumb3');
+        function animateDrag() {
+          if (!thumb2 || !thumb3) return;
+          /* Simulate dragging thumb 3 to position 2 */
+          thumb3.classList.add('dragging');
+          setTimeout(function () {
+            thumb3.classList.remove('dragging');
+            /* Swap numbers */
+            var grid = document.getElementById('mockThumbs');
+            if (grid && grid.children.length >= 3) {
+              var n2 = grid.children[1].querySelector('.mock-thumb-num');
+              var n3 = grid.children[2].querySelector('.mock-thumb-num');
+              if (n2 && n3) {
+                var t = n2.textContent;
+                n2.textContent = n3.textContent;
+                n3.textContent = t;
+                /* Swap colors */
+                var b2 = grid.children[1].querySelector('.mock-thumb-bar');
+                var b3 = grid.children[2].querySelector('.mock-thumb-bar');
+                if (b2 && b3) {
+                  var c = b2.style.background;
+                  b2.style.background = b3.style.background;
+                  b3.style.background = c;
+                }
+              }
+            }
+          }, 800);
+        }
+
+        function cycleScenes() {
+          if (reduceMotion) {
+            /* Show all scenes as first one */
+            showScene(0);
+            return;
+          }
+          /* Animate current scene */
+          if (currentScene === 0) animateDrag();
+          setTimeout(function () {
+            currentScene = (currentScene + 1) % 3;
+            showScene(currentScene);
+            if (currentScene === 0) {
+              setTimeout(animateDrag, 600);
+            }
+            setTimeout(cycleScenes, 4000);
+          }, 4000);
+        }
+
+        showScene(0);
+        if (!reduceMotion) {
+          setTimeout(function () {
+            animateDrag();
+            setTimeout(cycleScenes, 4000);
+          }, 1500);
+        }
+
+        /* ── Draw mock canvases for scene 2 ── */
+        function drawMockImage(canvasId, isSmaller) {
+          var canvas = document.getElementById(canvasId);
+          if (!canvas) return;
+          var ctx = canvas.getContext('2d');
+          var w = canvas.width;
+          var h = canvas.height;
+          /* Sky */
+          var skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.6);
+          skyGrad.addColorStop(0, '#2c2e33');
+          skyGrad.addColorStop(1, '#3b3d44');
+          ctx.fillStyle = skyGrad;
+          ctx.fillRect(0, 0, w, h * 0.6);
+          /* Ground */
+          ctx.fillStyle = '#373a40';
+          ctx.fillRect(0, h * 0.6, w, h * 0.4);
+          /* Mountains */
+          ctx.fillStyle = '#4a4d54';
+          ctx.beginPath();
+          ctx.moveTo(0, h * 0.6);
+          ctx.lineTo(w * 0.25, h * 0.3);
+          ctx.lineTo(w * 0.5, h * 0.55);
+          ctx.lineTo(w * 0.75, h * 0.25);
+          ctx.lineTo(w, h * 0.5);
+          ctx.lineTo(w, h * 0.6);
+          ctx.closePath();
+          ctx.fill();
+          /* Sun */
+          ctx.beginPath();
+          ctx.arc(w * 0.8, h * 0.2, isSmaller ? 8 : 12, 0, Math.PI * 2);
+          ctx.fillStyle = isSmaller ? '#51cf66' : '#fab005';
+          ctx.fill();
+        }
+        drawMockImage('mockCanvasOrig', false);
+        drawMockImage('mockCanvasConv', true);
 
         /* ── Tabs ── */
         var tabs = document.querySelectorAll('.tab-btn');
@@ -1604,65 +1827,42 @@
           tab.addEventListener('click', function () {
             tabs.forEach(function (t) {
               t.setAttribute('aria-selected', 'false');
-              document
-                .getElementById(t.getAttribute('aria-controls'))
-                .classList.remove('active');
+              document.getElementById(t.getAttribute('aria-controls')).classList.remove('active');
             });
             tab.setAttribute('aria-selected', 'true');
-            document
-              .getElementById(tab.getAttribute('aria-controls'))
-              .classList.add('active');
+            document.getElementById(tab.getAttribute('aria-controls')).classList.add('active');
           });
           tab.addEventListener('keydown', function (e) {
             var idx = Array.from(tabs).indexOf(tab);
             var next = -1;
-            if (e.key === 'ArrowRight')
-              next = (idx + 1) % tabs.length;
-            else if (e.key === 'ArrowLeft')
-              next = (idx - 1 + tabs.length) % tabs.length;
-            if (next >= 0) {
-              e.preventDefault();
-              tabs[next].click();
-              tabs[next].focus();
-            }
+            if (e.key === 'ArrowRight') next = (idx + 1) % tabs.length;
+            else if (e.key === 'ArrowLeft') next = (idx - 1 + tabs.length) % tabs.length;
+            if (next >= 0) { e.preventDefault(); tabs[next].click(); tabs[next].focus(); }
           });
         });
 
-        /* ── Copy buttons (Quick Start) ── */
+        /* ── Copy buttons ── */
         document.querySelectorAll('.qs-copy').forEach(function (btn) {
           btn.addEventListener('click', function () {
             var text = btn.getAttribute('data-copy');
             navigator.clipboard.writeText(text).then(function () {
               btn.textContent = 'Copied!';
               btn.classList.add('copied');
-              setTimeout(function () {
-                btn.textContent = 'Copy';
-                btn.classList.remove('copied');
-              }, 1500);
+              setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
             });
           });
         });
 
         /* ── Scroll reveal ── */
         if (!reduceMotion && 'IntersectionObserver' in window) {
-          var obs = new IntersectionObserver(
-            function (entries) {
-              entries.forEach(function (e) {
-                if (e.isIntersecting) {
-                  e.target.classList.add('visible');
-                  obs.unobserve(e.target);
-                }
-              });
-            },
-            { threshold: 0.12 }
-          );
-          document.querySelectorAll('.reveal').forEach(function (el) {
-            obs.observe(el);
-          });
+          var obs = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) {
+              if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+            });
+          }, { threshold: 0.12 });
+          document.querySelectorAll('.reveal').forEach(function (el) { obs.observe(el); });
         } else {
-          document.querySelectorAll('.reveal').forEach(function (el) {
-            el.classList.add('visible');
-          });
+          document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('visible'); });
         }
       })();
     </script>

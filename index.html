@@ -3,16 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Python Utilities API — PDF, image &amp; text processing in one server</title>
-    <meta name="description" content="A unified FastAPI server that bundles PDF, image, and text utilities behind a single API. Unlock, compress, convert, hash — one container, one port." />
+    <title>Python Utilities — PDF, image &amp; text processing toolkit</title>
+    <meta name="description" content="28 tools for PDF, image, and text processing. Full-stack app with React UI and FastAPI REST API. One container, all your file ops." />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E" />
-    <meta property="og:title" content="Python Utilities API" />
-    <meta property="og:description" content="PDF, image & text processing in one FastAPI server. Dockerised and ready to deploy." />
+    <meta property="og:title" content="Python Utilities" />
+    <meta property="og:description" content="28 tools for PDF, image &amp; text processing. Full-stack React + FastAPI toolkit." />
     <meta property="og:type" content="website" />
+    <script>
+      (function () {
+        var t = localStorage.getItem('theme');
+        if (t) document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script>
     <style>
-      /* ── Tokens ── */
+      /* ── Design tokens: dark (default) ── */
       :root {
-        --bg: #0d1017;
+        --bg: #0d1117;
         --surface: #161b22;
         --surface-raised: #1c2129;
         --border: #2a3140;
@@ -21,11 +27,14 @@
         --text-secondary: #7d8da1;
         --accent: #58a6ff;
         --accent-hover: #79c0ff;
-        --accent-subtle: rgba(88,166,255,.08);
-        --post-bg: rgba(188,140,255,.1);
+        --accent-subtle: rgba(88, 166, 255, 0.08);
+        --post-bg: rgba(188, 140, 255, 0.1);
         --post-text: #bc8cff;
-        --get-bg: rgba(63,185,80,.1);
+        --get-bg: rgba(63, 185, 80, 0.1);
         --get-text: #3fb950;
+        --cat-pdf: #bc8cff;
+        --cat-image: #f0883e;
+        --cat-text: #3fb950;
         --terminal-bg: #0a0d12;
         --terminal-dot-red: #ff5f57;
         --terminal-dot-yellow: #febc2e;
@@ -33,14 +42,17 @@
         --code-flag: #79c0ff;
         --code-string: #a5d6ff;
         --code-comment: #546178;
+        --badge-bg: rgba(88, 166, 255, 0.08);
+        --badge-text: var(--accent);
         --radius: 14px;
         --radius-sm: 8px;
         --space: clamp(4rem, 3rem + 5vw, 7rem);
-        --ease: cubic-bezier(.16, 1, .3, 1);
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
         --mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, 'Fira Code', monospace;
         --sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
       }
 
+      /* ── Light theme via OS preference ── */
       @media (prefers-color-scheme: light) {
         :root {
           --bg: #f6f8fa;
@@ -52,321 +64,865 @@
           --text-secondary: #636c76;
           --accent: #0969da;
           --accent-hover: #0550ae;
-          --accent-subtle: rgba(9,105,218,.06);
-          --post-bg: rgba(130,80,223,.08);
+          --accent-subtle: rgba(9, 105, 218, 0.06);
+          --post-bg: rgba(130, 80, 223, 0.08);
           --post-text: #8250df;
-          --get-bg: rgba(26,127,55,.08);
+          --get-bg: rgba(26, 127, 55, 0.08);
           --get-text: #1a7f37;
+          --cat-pdf: #8250df;
+          --cat-image: #bc4c00;
+          --cat-text: #1a7f37;
           --terminal-bg: #24292f;
-          --terminal-dot-red: #ff5f57;
-          --terminal-dot-yellow: #febc2e;
-          --terminal-dot-green: #28c840;
           --code-flag: #0550ae;
           --code-string: #0a3069;
           --code-comment: #6e7781;
+          --badge-bg: rgba(9, 105, 218, 0.06);
+          --badge-text: var(--accent);
         }
       }
+
+      /* ── Explicit dark override ── */
       :root[data-theme="dark"] {
-        --bg: #0d1017; --surface: #161b22; --surface-raised: #1c2129;
-        --border: #2a3140; --border-hover: #3d4663; --text: #e6edf3;
-        --text-secondary: #7d8da1; --accent: #58a6ff; --accent-hover: #79c0ff;
-        --accent-subtle: rgba(88,166,255,.08); --post-bg: rgba(188,140,255,.1);
-        --post-text: #bc8cff; --get-bg: rgba(63,185,80,.1); --get-text: #3fb950;
-        --terminal-bg: #0a0d12; --code-flag: #79c0ff; --code-string: #a5d6ff;
+        --bg: #0d1117;
+        --surface: #161b22;
+        --surface-raised: #1c2129;
+        --border: #2a3140;
+        --border-hover: #3d4663;
+        --text: #e6edf3;
+        --text-secondary: #7d8da1;
+        --accent: #58a6ff;
+        --accent-hover: #79c0ff;
+        --accent-subtle: rgba(88, 166, 255, 0.08);
+        --post-bg: rgba(188, 140, 255, 0.1);
+        --post-text: #bc8cff;
+        --get-bg: rgba(63, 185, 80, 0.1);
+        --get-text: #3fb950;
+        --cat-pdf: #bc8cff;
+        --cat-image: #f0883e;
+        --cat-text: #3fb950;
+        --terminal-bg: #0a0d12;
+        --code-flag: #79c0ff;
+        --code-string: #a5d6ff;
         --code-comment: #546178;
+        --badge-bg: rgba(88, 166, 255, 0.08);
+        --badge-text: var(--accent);
       }
+
+      /* ── Explicit light override ── */
       :root[data-theme="light"] {
-        --bg: #f6f8fa; --surface: #ffffff; --surface-raised: #f0f2f6;
-        --border: #d0d7de; --border-hover: #a8b1bd; --text: #1f2328;
-        --text-secondary: #636c76; --accent: #0969da; --accent-hover: #0550ae;
-        --accent-subtle: rgba(9,105,218,.06); --post-bg: rgba(130,80,223,.08);
-        --post-text: #8250df; --get-bg: rgba(26,127,55,.08); --get-text: #1a7f37;
-        --terminal-bg: #24292f; --code-flag: #0550ae; --code-string: #0a3069;
+        --bg: #f6f8fa;
+        --surface: #ffffff;
+        --surface-raised: #f0f2f6;
+        --border: #d0d7de;
+        --border-hover: #a8b1bd;
+        --text: #1f2328;
+        --text-secondary: #636c76;
+        --accent: #0969da;
+        --accent-hover: #0550ae;
+        --accent-subtle: rgba(9, 105, 218, 0.06);
+        --post-bg: rgba(130, 80, 223, 0.08);
+        --post-text: #8250df;
+        --get-bg: rgba(26, 127, 55, 0.08);
+        --get-text: #1a7f37;
+        --cat-pdf: #8250df;
+        --cat-image: #bc4c00;
+        --cat-text: #1a7f37;
+        --terminal-bg: #24292f;
+        --code-flag: #0550ae;
+        --code-string: #0a3069;
         --code-comment: #6e7781;
+        --badge-bg: rgba(9, 105, 218, 0.06);
+        --badge-text: var(--accent);
       }
 
-      /* ── Reset & base ── */
-      *, *::before, *::after { box-sizing: border-box; }
-      html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-      body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.6; }
-      a { color: inherit; }
-      img { max-width: 100%; }
+      /* ── Reset ── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        line-height: 1.6;
+      }
+      a {
+        color: inherit;
+      }
 
-      .wrap { max-width: 1160px; margin: 0 auto; padding: 0 1.5rem; }
+      .wrap {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+      }
 
       /* ── Portfolio nav ── */
-      .nav-home { position: fixed; top: 1rem; left: 1rem; z-index: 50; display: flex; gap: .5rem; }
-      .nav-btn {
-        display: inline-flex; align-items: center; gap: .35rem; padding: .5rem .9rem;
-        border-radius: 999px; font-size: .85rem; font-weight: 600; font-family: var(--sans);
-        text-decoration: none; color: var(--text); background: color-mix(in srgb, var(--surface) 82%, transparent);
-        border: 1px solid var(--border); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-        transition: transform .2s var(--ease), border-color .2s var(--ease);
+      .nav-home {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 50;
+        display: flex;
+        gap: 0.5rem;
       }
-      .nav-btn:hover { transform: translateY(-2px); border-color: var(--accent); }
-      .nav-label { }
-      .has-nav .hero { padding-top: clamp(5rem, 3.5rem + 5vw, 7.5rem); }
+      .nav-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: var(--sans);
+        text-decoration: none;
+        color: var(--text);
+        background: color-mix(in srgb, var(--surface) 82%, transparent);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        transition: transform 0.2s var(--ease), border-color 0.2s var(--ease);
+      }
+      .nav-btn:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+      }
+      .nav-label {
+      }
+      .has-nav .hero {
+        padding-top: clamp(5rem, 3.5rem + 5vw, 7.5rem);
+      }
 
       /* ── Theme toggle ── */
       .theme-toggle {
-        position: fixed; top: 1rem; right: 1rem; z-index: 50;
-        width: 2.4rem; height: 2.4rem; border-radius: 50%;
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 50;
+        width: 2.4rem;
+        height: 2.4rem;
+        border-radius: 50%;
         border: 1px solid var(--border);
         background: color-mix(in srgb, var(--surface) 85%, transparent);
-        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-        cursor: pointer; display: grid; place-items: center;
-        font-size: 1.15rem; line-height: 1; padding: 0;
-        color: var(--text); font-family: var(--sans);
-        transition: transform .2s var(--ease), border-color .2s var(--ease), box-shadow .2s var(--ease);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        font-size: 1.15rem;
+        line-height: 1;
+        padding: 0;
+        color: var(--text);
+        font-family: var(--sans);
+        transition: transform 0.2s var(--ease), border-color 0.2s var(--ease),
+          box-shadow 0.2s var(--ease);
       }
-      .theme-toggle:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 4px 16px rgba(0,0,0,.15); }
-      .theme-toggle:active { transform: scale(.95); }
-      .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .theme-toggle:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      }
+      .theme-toggle:active {
+        transform: scale(0.95);
+      }
+      .theme-toggle:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
 
       /* ── Hero ── */
-      .hero { position: relative; padding: clamp(3.5rem, 2rem + 5vw, 6rem) 0 var(--space); overflow: hidden; }
+      .hero {
+        position: relative;
+        padding: clamp(3.5rem, 2rem + 5vw, 6rem) 0 var(--space);
+        overflow: hidden;
+      }
       .hero::before {
-        content: ''; position: absolute; top: -260px; left: 50%; transform: translateX(-50%);
-        width: 900px; height: 500px;
-        background: radial-gradient(50% 50% at 50% 50%, rgba(88,166,255,.1), transparent 70%);
+        content: '';
+        position: absolute;
+        top: -260px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 900px;
+        height: 500px;
+        background: radial-gradient(
+          50% 50% at 50% 50%,
+          rgba(88, 166, 255, 0.1),
+          transparent 70%
+        );
         pointer-events: none;
       }
-      .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+      .hero-inner {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        align-items: center;
+      }
       .hero-text h1 {
-        font-size: clamp(2.2rem, 1rem + 4.5vw, 3.8rem); font-weight: 800;
-        letter-spacing: -.03em; line-height: 1.08; margin: 0; text-wrap: balance;
+        font-size: clamp(2.4rem, 1rem + 5vw, 4rem);
+        font-weight: 800;
+        letter-spacing: -0.035em;
+        line-height: 1.08;
+        margin: 0;
+        text-wrap: balance;
       }
       .hero-text .tagline {
-        color: var(--text-secondary); font-size: clamp(1rem, .9rem + .5vw, 1.2rem);
-        margin: 1rem 0 0; max-width: 38ch; text-wrap: pretty;
+        color: var(--text-secondary);
+        font-size: clamp(1rem, 0.9rem + 0.5vw, 1.2rem);
+        margin: 1rem 0 0;
+        max-width: 42ch;
+        text-wrap: pretty;
+        line-height: 1.55;
       }
-      .hero-actions { display: flex; gap: .7rem; flex-wrap: wrap; margin-top: 1.8rem; }
+      .hero-actions {
+        display: flex;
+        gap: 0.7rem;
+        flex-wrap: wrap;
+        margin-top: 1.8rem;
+      }
 
       .btn {
-        display: inline-flex; align-items: center; gap: .45rem; padding: .75rem 1.4rem;
-        border-radius: 10px; font-weight: 600; font-size: .92rem; text-decoration: none;
-        border: 1px solid transparent; cursor: pointer;
-        transition: transform .15s var(--ease), background .15s var(--ease), border-color .15s var(--ease), box-shadow .15s var(--ease);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.75rem 1.4rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        text-decoration: none;
+        border: 1px solid transparent;
+        cursor: pointer;
+        font-family: var(--sans);
+        transition: transform 0.15s var(--ease), background 0.15s var(--ease),
+          border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
       }
-      .btn:hover { transform: translateY(-1px); }
-      .btn:active { transform: scale(.97); }
-      .btn-primary { background: var(--accent); color: #fff; }
-      .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 20px rgba(88,166,255,.2); }
-      .btn-ghost { border-color: var(--border); color: var(--text); background: var(--surface); }
-      .btn-ghost:hover { border-color: var(--border-hover); }
-
-      .hero-stack {
-        display: flex; flex-wrap: wrap; gap: .4rem; margin-top: 1.2rem;
-        color: var(--text-secondary); font-size: .82rem;
+      .btn:hover {
+        transform: translateY(-1px);
       }
-      .hero-stack span {
-        padding: .2rem .6rem; border-radius: 6px; background: var(--accent-subtle);
-        color: var(--accent); font-weight: 500; font-size: .78rem; letter-spacing: .01em;
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: var(--accent-hover);
+        box-shadow: 0 4px 20px rgba(88, 166, 255, 0.2);
+      }
+      .btn-ghost {
+        border-color: var(--border);
+        color: var(--text);
+        background: var(--surface);
+      }
+      .btn-ghost:hover {
+        border-color: var(--border-hover);
       }
 
       /* ── Terminal ── */
       .terminal {
-        border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
-        box-shadow: 0 8px 40px rgba(0,0,0,.3), 0 0 0 1px rgba(88,166,255,.04);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3),
+          0 0 0 1px rgba(88, 166, 255, 0.04);
       }
       .terminal-bar {
-        display: flex; align-items: center; gap: 6px; padding: .6rem .9rem;
-        background: var(--surface); border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.6rem 0.9rem;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
       }
-      .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
-      .terminal-dot--r { background: var(--terminal-dot-red); }
-      .terminal-dot--y { background: var(--terminal-dot-yellow); }
-      .terminal-dot--g { background: var(--terminal-dot-green); }
+      .terminal-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .terminal-dot--r {
+        background: var(--terminal-dot-red);
+      }
+      .terminal-dot--y {
+        background: var(--terminal-dot-yellow);
+      }
+      .terminal-dot--g {
+        background: var(--terminal-dot-green);
+      }
       .terminal-title {
-        flex: 1; text-align: center; font-size: .72rem; font-family: var(--mono);
-        color: var(--text-secondary); letter-spacing: .02em;
+        flex: 1;
+        text-align: center;
+        font-size: 0.72rem;
+        font-family: var(--mono);
+        color: var(--text-secondary);
+        letter-spacing: 0.02em;
       }
       .terminal-body {
-        background: var(--terminal-bg); padding: 1rem 1.1rem; min-height: 180px;
-        font-family: var(--mono); font-size: .82rem; line-height: 1.65; color: #b4c0d4;
+        background: var(--terminal-bg);
+        padding: 1rem 1.1rem;
+        min-height: 170px;
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        line-height: 1.65;
+        color: #b4c0d4;
         position: relative;
       }
-      .terminal-body pre { background: none; border: none; margin: 0; padding: 0; white-space: pre-wrap; word-break: break-all; color: inherit; font: inherit; }
-      .t-prompt { color: var(--get-text); }
-      .t-flag { color: var(--code-flag); }
-      .t-str { color: var(--code-string); }
-      .t-comment { color: var(--code-comment); font-style: italic; }
-      .t-ok { color: var(--get-text); }
-      .cursor {
-        display: inline-block; width: 7px; height: 15px; background: var(--accent);
-        vertical-align: text-bottom; margin-left: 1px;
-        animation: blink .8s step-end infinite;
+      .terminal-body pre {
+        background: none;
+        border: none;
+        margin: 0;
+        padding: 0;
+        white-space: pre-wrap;
+        word-break: break-all;
+        color: inherit;
+        font: inherit;
       }
-      @keyframes blink { 50% { opacity: 0; } }
+      .t-prompt {
+        color: #3fb950;
+      }
+      .t-flag {
+        color: #79c0ff;
+      }
+      .t-str {
+        color: #a5d6ff;
+      }
+      .t-comment {
+        color: #546178;
+        font-style: italic;
+      }
+      .t-ok {
+        color: #3fb950;
+      }
+      .cursor {
+        display: inline-block;
+        width: 7px;
+        height: 15px;
+        background: var(--accent);
+        vertical-align: text-bottom;
+        margin-left: 1px;
+        animation: blink 0.8s step-end infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+
+      /* Terminal always dark — scoped syntax colors */
+      @media (prefers-color-scheme: light) {
+        .terminal-body {
+          --get-text: #3fb950;
+          --code-flag: #79c0ff;
+          --code-string: #a5d6ff;
+          --code-comment: #546178;
+        }
+        .code-block pre {
+          --code-flag: #79c0ff;
+          --code-string: #a5d6ff;
+          --code-comment: #546178;
+        }
+      }
+      :root[data-theme='light'] .terminal-body {
+        --get-text: #3fb950;
+        --code-flag: #79c0ff;
+        --code-string: #a5d6ff;
+        --code-comment: #546178;
+      }
+      :root[data-theme='light'] .code-block pre {
+        --code-flag: #79c0ff;
+        --code-string: #a5d6ff;
+        --code-comment: #546178;
+      }
 
       /* ── Sections ── */
-      section { padding: var(--space) 0; border-top: 1px solid var(--border); }
+      section {
+        padding: var(--space) 0;
+        border-top: 1px solid var(--border);
+      }
       .section-label {
-        font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-        color: var(--accent); margin: 0 0 .6rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 0.6rem;
       }
       h2 {
-        font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.2rem); font-weight: 700;
-        letter-spacing: -.02em; margin: 0 0 2rem; text-wrap: balance;
+        font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.2rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0 0 2rem;
+        text-wrap: balance;
       }
 
-      /* ── Capability cards ── */
-      .cap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-      .cap-card {
-        background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-        padding: 1.4rem; transition: transform .2s var(--ease), border-color .25s var(--ease), box-shadow .25s var(--ease);
+      /* ── Tool cards ── */
+      .tool-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
       }
-      .cap-card:hover { transform: translateY(-3px); border-color: var(--border-hover); box-shadow: 0 8px 30px rgba(0,0,0,.15); }
-      .cap-card h3 { margin: 0 0 .3rem; font-size: 1.05rem; display: flex; align-items: center; gap: .5rem; }
-      .cap-card h3 span { font-size: 1.2rem; }
-      .cap-desc { color: var(--text-secondary); font-size: .88rem; margin: 0 0 .9rem; text-wrap: pretty; }
-      .cap-pills { display: flex; flex-wrap: wrap; gap: .35rem; }
-      .cap-pill {
-        font-family: var(--mono); font-size: .72rem; padding: .2rem .5rem;
-        border-radius: 5px; background: var(--accent-subtle); color: var(--accent);
-        font-weight: 500; white-space: nowrap;
+      .tool-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.4rem 1.4rem 1.4rem 1.3rem;
+        transition: transform 0.2s var(--ease), border-color 0.25s var(--ease),
+          box-shadow 0.25s var(--ease);
+      }
+      .tool-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--border-hover);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+      }
+      .tool-card--pdf {
+        border-left-color: var(--cat-pdf);
+      }
+      .tool-card--pdf:hover {
+        border-left-color: var(--cat-pdf);
+      }
+      .tool-card--image {
+        border-left-color: var(--cat-image);
+      }
+      .tool-card--image:hover {
+        border-left-color: var(--cat-image);
+      }
+      .tool-card--text {
+        border-left-color: var(--cat-text);
+      }
+      .tool-card--text:hover {
+        border-left-color: var(--cat-text);
+      }
+      .tool-card h3 {
+        margin: 0 0 0.2rem;
+        font-size: 1.05rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .tool-card h3 span {
+        font-size: 1.15rem;
+      }
+      .tool-count {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin: 0 0 0.7rem;
+        font-family: var(--mono);
+      }
+      .tool-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.15rem 0.8rem;
+      }
+      .tool-list li {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        padding: 0.15rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+      .tool-list li::before {
+        content: '';
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--border-hover);
+        flex-shrink: 0;
+      }
+
+      /* ── Quick start ── */
+      .qs-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      .qs-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.4rem;
+        transition: border-color 0.2s var(--ease);
+      }
+      .qs-card:hover {
+        border-color: var(--border-hover);
+      }
+      .qs-card h3 {
+        margin: 0 0 0.3rem;
+        font-size: 0.98rem;
+        font-weight: 700;
+      }
+      .qs-card .qs-desc {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        margin: 0 0 0.8rem;
+      }
+      .qs-cmd {
+        position: relative;
+        background: var(--terminal-bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.7rem 3rem 0.7rem 0.9rem;
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        color: #b4c0d4;
+        overflow-x: auto;
+        white-space: pre;
+        line-height: 1.6;
+      }
+      .qs-copy {
+        position: absolute;
+        top: 0.45rem;
+        right: 0.45rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 5px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.06);
+        font-family: var(--sans);
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #7d8da1;
+        cursor: pointer;
+        transition: background 0.15s var(--ease), color 0.15s var(--ease),
+          border-color 0.15s var(--ease);
+        min-height: 26px;
+      }
+      .qs-copy:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #b4c0d4;
+      }
+      .qs-copy:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .qs-copy.copied {
+        color: #3fb950;
+        border-color: rgba(63, 185, 80, 0.3);
+      }
+      .qs-ports {
+        margin: 0.8rem 0 0;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+      .qs-ports code {
+        font-family: var(--mono);
+        font-size: 0.76rem;
+        background: var(--accent-subtle);
+        border-radius: 4px;
+        padding: 0.1rem 0.35rem;
+        color: var(--accent);
+        font-weight: 500;
       }
 
       /* ── Tabbed API explorer ── */
       .tabs-bar {
-        display: flex; gap: .25rem; padding: .25rem; background: var(--surface);
-        border: 1px solid var(--border); border-radius: 10px; margin-bottom: 1.2rem; width: fit-content;
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-bottom: 1.2rem;
+        width: fit-content;
       }
       .tab-btn {
-        padding: .55rem 1.2rem; border-radius: 7px; border: none; background: none;
-        font-family: var(--sans); font-size: .88rem; font-weight: 600; color: var(--text-secondary);
-        cursor: pointer; transition: background .15s var(--ease), color .15s var(--ease);
+        padding: 0.55rem 1.2rem;
+        border-radius: 7px;
+        border: none;
+        background: none;
+        font-family: var(--sans);
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: background 0.15s var(--ease), color 0.15s var(--ease);
         min-height: 40px;
       }
-      .tab-btn:hover { color: var(--text); background: var(--accent-subtle); }
-      .tab-btn[aria-selected="true"] { background: var(--accent); color: #fff; }
-      .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-      .tab-panel { display: none; }
-      .tab-panel.active { display: block; }
+      .tab-btn:hover {
+        color: var(--text);
+        background: var(--accent-subtle);
+      }
+      .tab-btn[aria-selected='true'] {
+        background: var(--accent);
+        color: #fff;
+      }
+      .tab-btn:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
 
-      .tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
-      table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+      .tbl-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+      }
       th {
-        text-align: left; color: var(--text-secondary); font-weight: 600; font-size: .76rem;
-        letter-spacing: .04em; text-transform: uppercase; padding: .7rem 1rem;
-        border-bottom: 1px solid var(--border); white-space: nowrap;
+        text-align: left;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.74rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 0.7rem 1rem;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
       }
-      td { padding: .6rem 1rem; border-bottom: 1px solid var(--border); }
-      tr:last-child td { border-bottom: none; }
-      td:first-child { white-space: nowrap; }
-      .ep-path { font-family: var(--mono); font-size: .82rem; font-weight: 500; color: var(--text); }
+      td {
+        padding: 0.55rem 1rem;
+        border-bottom: 1px solid var(--border);
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      td:first-child {
+        white-space: nowrap;
+      }
+      .ep-path {
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: var(--text);
+      }
       .method-badge {
-        display: inline-block; padding: .12rem .5rem; border-radius: 5px; font-size: .7rem;
-        font-weight: 700; letter-spacing: .04em; font-family: var(--mono); font-variant-numeric: tabular-nums;
+        display: inline-block;
+        padding: 0.12rem 0.5rem;
+        border-radius: 5px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
       }
-      .method-post { background: var(--post-bg); color: var(--post-text); }
-      .method-get { background: var(--get-bg); color: var(--get-text); }
-      td:last-child { color: var(--text-secondary); }
+      .method-post {
+        background: var(--post-bg);
+        color: var(--post-text);
+      }
+      .method-get {
+        background: var(--get-bg);
+        color: var(--get-text);
+      }
+      td:last-child {
+        color: var(--text-secondary);
+      }
 
-      /* ── Code blocks ── */
-      .code-block {
-        position: relative; border: 1px solid var(--border); border-radius: var(--radius);
-        overflow: hidden; margin-bottom: 1rem;
+      /* ── Architecture ── */
+      .arch-wrap {
+        display: flex;
+        justify-content: center;
       }
-      .code-block:last-child { margin-bottom: 0; }
-      .code-header {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: .5rem .9rem; background: var(--surface); border-bottom: 1px solid var(--border);
-        font-size: .76rem; color: var(--text-secondary);
+      .arch-block {
+        background: var(--terminal-bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.6rem 2.4rem;
+        overflow-x: auto;
+        display: inline-block;
       }
-      .code-label { font-family: var(--mono); font-weight: 500; }
-      .copy-btn {
-        padding: .3rem .7rem; border-radius: 6px; border: 1px solid var(--border);
-        background: var(--surface-raised); font-family: var(--sans); font-size: .75rem;
-        font-weight: 600; color: var(--text-secondary); cursor: pointer;
-        transition: background .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease);
-        min-height: 30px;
+      .arch-block pre {
+        margin: 0;
+        font-family: var(--mono);
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: #b4c0d4;
+        white-space: pre;
+        background: none;
+        border: none;
+        padding: 0;
       }
-      .copy-btn:hover { border-color: var(--border-hover); color: var(--text); }
-      .copy-btn:active { transform: scale(.96); }
-      .copy-btn.copied { border-color: var(--get-text); color: var(--get-text); }
-      .code-block pre {
-        background: var(--terminal-bg); margin: 0; padding: 1rem 1.1rem;
-        font-family: var(--mono); font-size: .82rem; line-height: 1.7; color: #b4c0d4;
-        overflow-x: auto; border: none; border-radius: 0;
+      .arch-block .a-box {
+        color: var(--accent);
       }
-      .code-block .cf { color: var(--code-flag); }
-      .code-block .cs { color: var(--code-string); }
-      .code-block .cc { color: var(--code-comment); }
+      .arch-block .a-label {
+        color: #e6edf3;
+        font-weight: 600;
+      }
+      .arch-block .a-port {
+        color: #7d8da1;
+      }
+      .arch-block .a-arrow {
+        color: var(--cat-image);
+      }
+      .arch-block .a-docker {
+        color: #79c0ff;
+      }
 
-      /* Force dark-friendly syntax colours inside dark-bg containers in light mode */
+      /* Arch block always dark */
       @media (prefers-color-scheme: light) {
-        .terminal-body { --get-text: #3fb950; --code-flag: #79c0ff; --code-string: #a5d6ff; --code-comment: #546178; }
-        .code-block pre { --code-flag: #79c0ff; --code-string: #a5d6ff; --code-comment: #546178; }
+        .arch-block {
+          background: #24292f;
+        }
       }
-      :root[data-theme="light"] .terminal-body { --get-text: #3fb950; --code-flag: #79c0ff; --code-string: #a5d6ff; --code-comment: #546178; }
-      :root[data-theme="light"] .code-block pre { --code-flag: #79c0ff; --code-string: #a5d6ff; --code-comment: #546178; }
-
-      /* ── Quick start ── */
-      .qs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-      .qs-card {
-        background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-        padding: 1.3rem 1.4rem; display: flex; gap: 1rem; align-items: flex-start;
-        transition: border-color .2s var(--ease);
+      :root[data-theme='light'] .arch-block {
+        background: #24292f;
       }
-      .qs-card:hover { border-color: var(--border-hover); }
-      .qs-num {
-        flex: 0 0 auto; width: 2rem; height: 2rem; border-radius: 8px;
-        background: var(--accent-subtle); color: var(--accent); display: grid; place-items: center;
-        font-weight: 700; font-size: .85rem; font-variant-numeric: tabular-nums;
-      }
-      .qs-card strong { color: var(--text); display: block; margin-bottom: .2rem; }
-      .qs-card p { margin: 0; color: var(--text-secondary); font-size: .88rem; text-wrap: pretty; }
-      .qs-card code {
-        font-family: var(--mono); font-size: .78rem; background: var(--surface-raised);
-        border: 1px solid var(--border); border-radius: 5px; padding: .1rem .4rem;
-      }
-
-      /* ── Scroll reveal ── */
-      .reveal { opacity: 0; transform: translateY(20px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
-      .reveal.visible { opacity: 1; transform: translateY(0); }
 
       /* ── Footer ── */
       footer {
-        text-align: center; color: var(--text-secondary); padding: 2.5rem 0;
-        border-top: 1px solid var(--border); font-size: .85rem;
+        text-align: center;
+        color: var(--text-secondary);
+        padding: 2.5rem 0;
+        border-top: 1px solid var(--border);
+        font-size: 0.85rem;
       }
-      footer a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); }
-      footer a:hover { border-color: var(--accent); }
-      footer p { margin: .3rem 0; }
+      footer a {
+        color: var(--text);
+        text-decoration: none;
+        border-bottom: 1px solid var(--border);
+      }
+      footer a:hover {
+        border-color: var(--accent);
+      }
+      footer p {
+        margin: 0.3rem 0;
+      }
+      .tech-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        justify-content: center;
+        margin-bottom: 1rem;
+      }
+      .tech-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.25rem 0.7rem;
+        border-radius: 6px;
+        font-size: 0.76rem;
+        font-weight: 600;
+        font-family: var(--mono);
+        letter-spacing: 0.01em;
+        background: var(--badge-bg);
+        color: var(--badge-text);
+        border: 1px solid var(--border);
+      }
+
+      /* ── Scroll reveal ── */
+      .reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+      }
+      .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
 
       /* ── Responsive ── */
       @media (max-width: 860px) {
-        .nav-label { display: none; }
-        .nav-btn { padding: .5rem .6rem; }
-        .hero-inner { grid-template-columns: 1fr; text-align: center; }
-        .hero-text .tagline { margin-left: auto; margin-right: auto; }
-        .hero-actions { justify-content: center; }
-        .hero-stack { justify-content: center; }
-        .cap-grid { grid-template-columns: 1fr; }
-        .qs-grid { grid-template-columns: 1fr; }
-        .tabs-bar { width: 100%; }
-        .tab-btn { flex: 1; text-align: center; }
+        .nav-label {
+          display: none;
+        }
+        .nav-btn {
+          padding: 0.5rem 0.6rem;
+        }
+        .hero-inner {
+          grid-template-columns: 1fr;
+          text-align: center;
+        }
+        .hero-text .tagline {
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .hero-actions {
+          justify-content: center;
+        }
+        .tool-grid {
+          grid-template-columns: 1fr;
+        }
+        .tool-list {
+          grid-template-columns: 1fr 1fr;
+        }
+        .qs-grid {
+          grid-template-columns: 1fr;
+        }
+        .tabs-bar {
+          width: 100%;
+        }
+        .tab-btn {
+          flex: 1;
+          text-align: center;
+        }
+        .arch-block {
+          padding: 1rem 1.2rem;
+        }
+        .arch-block pre {
+          font-size: 0.72rem;
+        }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after { animation-duration: 0s !important; transition-duration: 0s !important; }
-        html { scroll-behavior: auto; }
-        .reveal { opacity: 1; transform: none; }
-        .cursor { animation: none; opacity: 1; }
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0s !important;
+          transition-duration: 0s !important;
+        }
+        html {
+          scroll-behavior: auto;
+        }
+        .reveal {
+          opacity: 1;
+          transform: none;
+        }
+        .cursor {
+          animation: none;
+          opacity: 1;
+        }
       }
     </style>
   </head>
   <body>
-    <script>(function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
-
     <!-- Theme toggle -->
-    <button class="theme-toggle" id="themeToggle" aria-label="Switch to light mode" title="Toggle theme"></button>
+    <button
+      class="theme-toggle"
+      id="themeToggle"
+      aria-label="Switch to light mode"
+      title="Toggle theme"
+    ></button>
 
     <!-- Portfolio nav -->
     <nav class="nav-home" id="navHome" hidden aria-label="Back to portfolio">
-      <a class="nav-btn" id="navBack" href="https://karantrehan3.github.io/" rel="noopener" aria-label="Back">&#8592; <span class="nav-label">Back</span></a>
-      <a class="nav-btn" href="https://karantrehan3.github.io/" rel="noopener" aria-label="Home">&#8962; <span class="nav-label">Home</span></a>
+      <a
+        class="nav-btn"
+        id="navBack"
+        href="https://karantrehan3.github.io/"
+        rel="noopener"
+        aria-label="Back"
+        >&#8592; <span class="nav-label">Back</span></a
+      >
+      <a
+        class="nav-btn"
+        href="https://karantrehan3.github.io/"
+        rel="noopener"
+        aria-label="Home"
+        >&#8962; <span class="nav-label">Home</span></a
+      >
     </nav>
 
     <!-- Hero -->
@@ -374,14 +930,22 @@
       <div class="wrap">
         <div class="hero-inner">
           <div class="hero-text">
-            <h1>Python Utilities&nbsp;API</h1>
-            <p class="tagline">PDF, image, and text processing — bundled into one FastAPI server. One container, one port, all your file ops.</p>
+            <h1>Python Utilities</h1>
+            <p class="tagline">
+              28 tools for PDF, image &amp; text processing. Full-stack app with
+              visual UI and REST API.
+            </p>
             <div class="hero-actions">
-              <a class="btn btn-primary" href="https://github.com/karantrehan3/python-utilities">View on GitHub</a>
-              <a class="btn btn-ghost" href="#api">Explore endpoints</a>
-            </div>
-            <div class="hero-stack">
-              <span>FastAPI</span> <span>PyMuPDF</span> <span>Pillow</span> <span>Pydantic v2</span> <span>Docker</span>
+              <a class="btn btn-primary" href="#quick-start"
+                >Open App &#8594;</a
+              >
+              <a
+                class="btn btn-ghost"
+                href="https://github.com/karantrehan3/python-utilities"
+                target="_blank"
+                rel="noopener"
+                >GitHub &#8599;</a
+              >
             </div>
           </div>
           <div class="hero-terminal">
@@ -390,9 +954,13 @@
                 <span class="terminal-dot terminal-dot--r"></span>
                 <span class="terminal-dot terminal-dot--y"></span>
                 <span class="terminal-dot terminal-dot--g"></span>
-                <span class="terminal-title">python-utilities &mdash; bash</span>
+                <span class="terminal-title"
+                  >python-utilities &mdash; bash</span
+                >
               </div>
-              <div class="terminal-body"><pre id="termPre"></pre></div>
+              <div class="terminal-body">
+                <pre id="termPre"></pre>
+              </div>
             </div>
           </div>
         </div>
@@ -400,178 +968,440 @@
     </header>
 
     <main>
-      <!-- Capabilities -->
-      <section id="capabilities" class="reveal">
+      <!-- Tools -->
+      <section id="tools" class="reveal" aria-labelledby="tools-heading">
         <div class="wrap">
           <p class="section-label">Capabilities</p>
-          <h2>Three toolkits, one server</h2>
-          <div class="cap-grid">
-            <div class="cap-card">
-              <h3><span>&#128196;</span> PDF Processing</h3>
-              <p class="cap-desc">Unlock, merge, compress, split, and convert — everything you need for PDF workflows.</p>
-              <div class="cap-pills">
-                <span class="cap-pill">/unlock</span>
-                <span class="cap-pill">/merge</span>
-                <span class="cap-pill">/compress</span>
-                <span class="cap-pill">/subset</span>
-                <span class="cap-pill">/from-images</span>
-                <span class="cap-pill">/info</span>
-              </div>
+          <h2 id="tools-heading">28 Tools, 3 Categories</h2>
+          <div class="tool-grid">
+            <div class="tool-card tool-card--pdf">
+              <h3><span>&#128196;</span> PDF</h3>
+              <p class="tool-count">12 tools</p>
+              <ul class="tool-list">
+                <li>Unlock</li>
+                <li>Protect</li>
+                <li>Info</li>
+                <li>Extract Pages</li>
+                <li>Split</li>
+                <li>Merge</li>
+                <li>Rotate Pages</li>
+                <li>Add Watermark</li>
+                <li>Add Page Numbers</li>
+                <li>Images to PDF</li>
+                <li>PDF to Images</li>
+                <li>Compress</li>
+              </ul>
             </div>
-            <div class="cap-card">
-              <h3><span>&#128248;</span> Image Processing</h3>
-              <p class="cap-desc">Resize, convert, and inspect — via base64, URL, or direct file upload.</p>
-              <div class="cap-pills">
-                <span class="cap-pill">/resize</span>
-                <span class="cap-pill">/convert</span>
-                <span class="cap-pill">/info</span>
-                <span class="cap-pill">/formats</span>
-                <span class="cap-pill">file upload</span>
-              </div>
+            <div class="tool-card tool-card--image">
+              <h3><span>&#128248;</span> Images</h3>
+              <p class="tool-count">7 tools</p>
+              <ul class="tool-list">
+                <li>Resize</li>
+                <li>Crop</li>
+                <li>Rotate / Flip</li>
+                <li>Convert Format</li>
+                <li>Compress</li>
+                <li>Adjust</li>
+                <li>Info</li>
+              </ul>
             </div>
-            <div class="cap-card">
-              <h3><span>&#128268;</span> Text Processing</h3>
-              <p class="cap-desc">Hash, encode, and decode text. Lightweight, zero-config, instantly useful.</p>
-              <div class="cap-pills">
-                <span class="cap-pill">/hash</span>
-                <span class="cap-pill">/encode</span>
-                <span class="cap-pill">/decode</span>
-                <span class="cap-pill">MD5</span>
-                <span class="cap-pill">SHA-256</span>
-                <span class="cap-pill">Base64</span>
-              </div>
+            <div class="tool-card tool-card--text">
+              <h3><span>&#128221;</span> Text</h3>
+              <p class="tool-count">9 tools</p>
+              <ul class="tool-list">
+                <li>Hash</li>
+                <li>Encode</li>
+                <li>Decode</li>
+                <li>Diff</li>
+                <li>Regex Tester</li>
+                <li>JSON Format</li>
+                <li>JSON Minify</li>
+                <li>CSV&#8596;JSON</li>
+                <li>Generate</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Start -->
+      <section
+        id="quick-start"
+        class="reveal"
+        aria-labelledby="qs-heading"
+      >
+        <div class="wrap">
+          <p class="section-label">Get Started</p>
+          <h2 id="qs-heading">Quick Start</h2>
+          <div class="qs-grid">
+            <div class="qs-card">
+              <h3>&#128051; Docker</h3>
+              <p class="qs-desc">
+                Build and start both services with one command.
+              </p>
+              <div class="qs-cmd">make start<button
+                  class="qs-copy"
+                  data-copy="make start"
+                  aria-label="Copy Docker command"
+                >Copy</button></div>
+              <p class="qs-ports">
+                UI at <code>localhost:4002</code> &middot; API at
+                <code>localhost:4001</code>
+              </p>
+            </div>
+            <div class="qs-card">
+              <h3>&#128187; Local Dev</h3>
+              <p class="qs-desc">
+                Install dependencies and start with hot-reload.
+              </p>
+              <div class="qs-cmd">make install &amp;&amp; make dev<button
+                  class="qs-copy"
+                  data-copy="make install && make dev"
+                  aria-label="Copy local dev command"
+                >Copy</button></div>
+              <p class="qs-ports">
+                UI at <code>localhost:4002</code> &middot; API at
+                <code>localhost:4001</code>
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       <!-- API Explorer -->
-      <section id="api" class="reveal">
+      <section id="api" class="reveal" aria-labelledby="api-heading">
         <div class="wrap">
           <p class="section-label">API Reference</p>
-          <h2>Every endpoint at a glance</h2>
-          <div class="tabs-bar" role="tablist" aria-label="API category">
-            <button class="tab-btn" role="tab" aria-selected="true" aria-controls="panel-pdf" id="tab-pdf">PDF</button>
-            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-image" id="tab-image">Image</button>
-            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-text" id="tab-text">Text</button>
+          <h2 id="api-heading">Every endpoint at a glance</h2>
+          <div
+            class="tabs-bar"
+            role="tablist"
+            aria-label="API category"
+          >
+            <button
+              class="tab-btn"
+              role="tab"
+              aria-selected="true"
+              aria-controls="panel-pdf"
+              id="tab-pdf"
+            >
+              PDF
+            </button>
+            <button
+              class="tab-btn"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-image"
+              id="tab-image"
+            >
+              Images
+            </button>
+            <button
+              class="tab-btn"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-text"
+              id="tab-text"
+            >
+              Text
+            </button>
           </div>
 
-          <div id="panel-pdf" class="tab-panel active" role="tabpanel" aria-labelledby="tab-pdf">
-            <div class="tbl-wrap"><table>
-              <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
-              <tbody>
-                <tr><td class="ep-path">/unlock</td><td><span class="method-badge method-post">POST</span></td><td>Unlock a password-protected PDF</td></tr>
-                <tr><td class="ep-path">/info</td><td><span class="method-badge method-post">POST</span></td><td>Page count, encryption status, metadata</td></tr>
-                <tr><td class="ep-path">/subset</td><td><span class="method-badge method-post">POST</span></td><td>Extract a page range into a new PDF</td></tr>
-                <tr><td class="ep-path">/merge</td><td><span class="method-badge method-post">POST</span></td><td>Merge multiple PDFs into one document</td></tr>
-                <tr><td class="ep-path">/from-images</td><td><span class="method-badge method-post">POST</span></td><td>Combine images into a single PDF</td></tr>
-                <tr><td class="ep-path">/compress</td><td><span class="method-badge method-post">POST</span></td><td>Compress a PDF (returns the file)</td></tr>
-                <tr><td class="ep-path">/compress/info</td><td><span class="method-badge method-post">POST</span></td><td>Compress a PDF (returns size-reduction stats)</td></tr>
-              </tbody>
-            </table></div>
+          <div
+            id="panel-pdf"
+            class="tab-panel active"
+            role="tabpanel"
+            aria-labelledby="tab-pdf"
+          >
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Endpoint</th>
+                    <th>Method</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="ep-path">/unlock</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Unlock a password-protected PDF</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/protect</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Add password protection</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/info</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Get page count, encryption status, metadata</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/subset</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Extract a page range</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/split</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Split into individual pages (ZIP)</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/merge</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Merge multiple PDFs</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/rotate</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Rotate pages by 90/180/270&deg;</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/watermark</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Add text watermark</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/add-page-numbers</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Stamp page numbers</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/from-images</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Convert images to PDF</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/to-images</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Convert pages to images (ZIP)</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/compress</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Compress a PDF</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div id="panel-image" class="tab-panel" role="tabpanel" aria-labelledby="tab-image">
-            <div class="tbl-wrap"><table>
-              <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
-              <tbody>
-                <tr><td class="ep-path">/resize</td><td><span class="method-badge method-post">POST</span></td><td>Resize via base64 or URL</td></tr>
-                <tr><td class="ep-path">/convert</td><td><span class="method-badge method-post">POST</span></td><td>Convert format via base64 or URL</td></tr>
-                <tr><td class="ep-path">/info</td><td><span class="method-badge method-post">POST</span></td><td>Dimensions, format, size</td></tr>
-                <tr><td class="ep-path">/resize/file</td><td><span class="method-badge method-post">POST</span></td><td>Resize from file upload</td></tr>
-                <tr><td class="ep-path">/convert/file</td><td><span class="method-badge method-post">POST</span></td><td>Convert from file upload</td></tr>
-                <tr><td class="ep-path">/info/file</td><td><span class="method-badge method-post">POST</span></td><td>Info from file upload</td></tr>
-                <tr><td class="ep-path">/formats</td><td><span class="method-badge method-get">GET</span></td><td>Supported image formats</td></tr>
-              </tbody>
-            </table></div>
+          <div
+            id="panel-image"
+            class="tab-panel"
+            role="tabpanel"
+            aria-labelledby="tab-image"
+          >
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Endpoint</th>
+                    <th>Method</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="ep-path">/resize/file</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Resize with aspect ratio control</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/crop/file</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Crop to coordinates</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/rotate/file</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Rotate and flip</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/convert/file</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Convert between formats</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/compress/file</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Reduce file size</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/adjust/file</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Brightness, contrast, saturation</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/info/file</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Get dimensions and metadata</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/formats</td>
+                    <td>
+                      <span class="method-badge method-get">GET</span>
+                    </td>
+                    <td>List supported formats</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div id="panel-text" class="tab-panel" role="tabpanel" aria-labelledby="tab-text">
-            <div class="tbl-wrap"><table>
-              <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
-              <tbody>
-                <tr><td class="ep-path">/hash</td><td><span class="method-badge method-post">POST</span></td><td>Hash text (MD5, SHA-256, etc.)</td></tr>
-                <tr><td class="ep-path">/encode</td><td><span class="method-badge method-post">POST</span></td><td>Base64 / hex encode</td></tr>
-                <tr><td class="ep-path">/decode</td><td><span class="method-badge method-post">POST</span></td><td>Base64 / hex decode</td></tr>
-                <tr><td class="ep-path">/algorithms</td><td><span class="method-badge method-get">GET</span></td><td>Supported hash algorithms</td></tr>
-                <tr><td class="ep-path">/encodings</td><td><span class="method-badge method-get">GET</span></td><td>Supported encodings</td></tr>
-              </tbody>
-            </table></div>
+          <div
+            id="panel-text"
+            class="tab-panel"
+            role="tabpanel"
+            aria-labelledby="tab-text"
+          >
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Endpoint</th>
+                    <th>Method</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="ep-path">/hash</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Hash text (MD5, SHA-256, etc.)</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/encode</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Base64/URL/HTML encode</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/decode</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Base64/URL/HTML decode</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/diff</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Compare two texts</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/regex</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Test regex patterns</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/json/format</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Pretty-print JSON</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/json/minify</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Minify JSON</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/csv-json</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Convert CSV&#8596;JSON</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/generate</td>
+                    <td>
+                      <span class="method-badge method-post">POST</span>
+                    </td>
+                    <td>Generate UUIDs or Lorem ipsum</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/algorithms</td>
+                    <td>
+                      <span class="method-badge method-get">GET</span>
+                    </td>
+                    <td>List hash algorithms</td>
+                  </tr>
+                  <tr>
+                    <td class="ep-path">/encodings</td>
+                    <td>
+                      <span class="method-badge method-get">GET</span>
+                    </td>
+                    <td>List encoding types</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- Examples -->
-      <section id="examples" class="reveal">
+      <!-- Architecture -->
+      <section id="architecture" class="reveal" aria-labelledby="arch-heading">
         <div class="wrap">
-          <p class="section-label">Examples</p>
-          <h2>Copy, paste, run</h2>
-
-          <div class="code-block">
-            <div class="code-header">
-              <span class="code-label">Merge two PDFs</span>
-              <button class="copy-btn" aria-label="Copy to clipboard">Copy</button>
-            </div>
-            <pre><code>curl <span class="cf">-X POST</span> http://localhost:4001/api/v1/pdf/merge \
-  <span class="cf">-F</span> <span class="cs">"files=@contract.pdf"</span> <span class="cf">-F</span> <span class="cs">"files=@appendix.pdf"</span> \
-  <span class="cf">-o</span> merged.pdf</code></pre>
-          </div>
-
-          <div class="code-block">
-            <div class="code-header">
-              <span class="code-label">Compress a PDF</span>
-              <button class="copy-btn" aria-label="Copy to clipboard">Copy</button>
-            </div>
-            <pre><code>curl <span class="cf">-X POST</span> http://localhost:4001/api/v1/pdf/compress \
-  <span class="cf">-F</span> <span class="cs">"file=@report.pdf"</span> <span class="cf">-F</span> <span class="cs">"image_quality=60"</span> \
-  <span class="cf">-o</span> compressed.pdf</code></pre>
-          </div>
-
-          <div class="code-block">
-            <div class="code-header">
-              <span class="code-label">Hash text</span>
-              <button class="copy-btn" aria-label="Copy to clipboard">Copy</button>
-            </div>
-            <pre><code>curl <span class="cf">-X POST</span> http://localhost:4001/api/v1/text/hash \
-  <span class="cf">-H</span> <span class="cs">"Content-Type: application/json"</span> \
-  <span class="cf">-d</span> <span class="cs">'{"text": "hello world", "algorithm": "sha256"}'</span></code></pre>
-          </div>
-        </div>
-      </section>
-
-      <!-- Quick start -->
-      <section id="start" class="reveal">
-        <div class="wrap">
-          <p class="section-label">Get Started</p>
-          <h2>Running in under a minute</h2>
-          <div class="qs-grid">
-            <div class="qs-card">
-              <div class="qs-num">1</div>
-              <div>
-                <strong>Clone the repo</strong>
-                <p><code>git clone https://github.com/karantrehan3/python-utilities.git</code></p>
-              </div>
-            </div>
-            <div class="qs-card">
-              <div class="qs-num">2</div>
-              <div>
-                <strong>Start with Docker</strong>
-                <p><code>make start</code> builds the image and serves on port 4001.</p>
-              </div>
-            </div>
-            <div class="qs-card">
-              <div class="qs-num">3</div>
-              <div>
-                <strong>Or run locally</strong>
-                <p><code>make install-dev &amp;&amp; make dev-reload</code> for uvicorn with hot-reload.</p>
-              </div>
-            </div>
-            <div class="qs-card">
-              <div class="qs-num">4</div>
-              <div>
-                <strong>Open the docs</strong>
-                <p>Visit <a href="http://localhost:4001/docs" style="color:var(--accent)">localhost:4001/docs</a> for the interactive Swagger UI.</p>
-              </div>
+          <p class="section-label">Architecture</p>
+          <h2 id="arch-heading">Monorepo structure</h2>
+          <div class="arch-wrap">
+            <div class="arch-block">
+              <pre><span class="a-box">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>     <span class="a-box">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="a-box">&#9474;</span>   <span class="a-label">client/</span>   <span class="a-box">&#9474;</span> <span class="a-arrow">&#9472;&#9472;&#9654;</span> <span class="a-box">&#9474;</span>   <span class="a-label">server/</span>    <span class="a-box">&#9474;</span>
+<span class="a-box">&#9474;</span>  <span class="a-port">React+Vite</span> <span class="a-box">&#9474;</span>     <span class="a-box">&#9474;</span>   <span class="a-port">FastAPI</span>    <span class="a-box">&#9474;</span>
+<span class="a-box">&#9474;</span>  <span class="a-port">Port 4002</span>  <span class="a-box">&#9474;</span>     <span class="a-box">&#9474;</span>   <span class="a-port">Port 4001</span>   <span class="a-box">&#9474;</span>
+<span class="a-box">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span>     <span class="a-box">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span>
+        <span class="a-docker">&#9492;&#9472;&#9472;&#9472; Docker Compose &#9472;&#9472;&#9472;&#9496;</span></pre>
             </div>
           </div>
         </div>
@@ -580,186 +1410,261 @@
 
     <footer>
       <div class="wrap">
-        <p>Built with FastAPI &amp; Python &middot; <a href="https://github.com/karantrehan3/python-utilities">GitHub</a> &middot; <a href="https://github.com/karantrehan3/python-utilities/blob/master/LICENSE">MIT</a></p>
-        <p>&copy; 2025 Karan Trehan</p>
+        <div class="tech-badges">
+          <span class="tech-badge">Python</span>
+          <span class="tech-badge">FastAPI</span>
+          <span class="tech-badge">React</span>
+          <span class="tech-badge">TypeScript</span>
+          <span class="tech-badge">Docker</span>
+          <span class="tech-badge">Mantine</span>
+        </div>
+        <p>
+          <a
+            href="https://github.com/karantrehan3/python-utilities"
+            target="_blank"
+            rel="noopener"
+            >GitHub</a
+          >
+          &middot;
+          <a
+            href="https://github.com/karantrehan3/python-utilities/blob/master/LICENSE"
+            target="_blank"
+            rel="noopener"
+            >MIT License</a
+          >
+        </p>
+        <p>&copy; 2026 Karan Trehan</p>
       </div>
     </footer>
 
     <script>
-    (function () {
-      /* ── Theme toggle ── */
-      var themeToggle = document.getElementById('themeToggle');
-      function getEffectiveTheme() {
-        var explicit = document.documentElement.getAttribute('data-theme');
-        if (explicit) return explicit;
-        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-      }
-      function updateToggleIcon() {
-        var theme = getEffectiveTheme();
-        themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
-        themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-      }
-      themeToggle.addEventListener('click', function () {
-        var next = getEffectiveTheme() === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
-        updateToggleIcon();
-      });
-      updateToggleIcon();
-
-      /* ── Portfolio nav ── */
-      if (new URLSearchParams(location.search).get('ref') === 'portfolio') {
-        var nav = document.getElementById('navHome');
-        if (nav) nav.removeAttribute('hidden');
-        document.body.classList.add('has-nav');
-        var back = document.getElementById('navBack');
-        if (back) back.addEventListener('click', function (e) {
-          if (document.referrer && history.length > 1) { e.preventDefault(); history.back(); }
-        });
-      }
-
-      /* ── Terminal typing animation ── */
-      var demos = [
-        {
-          lines: [
-            { type: 'prompt', text: '$ ' },
-            { type: 'cmd', text: 'curl -X POST :4001/api/v1/pdf/merge \\\n  -F "files=@contract.pdf" -F "files=@appendix.pdf" \\\n  -o merged.pdf' },
-            { type: 'blank' },
-            { type: 'response', text: '✓ 200 OK — merged.pdf (340 KB, 12 pages)' }
-          ]
-        },
-        {
-          lines: [
-            { type: 'prompt', text: '$ ' },
-            { type: 'cmd', text: 'curl -X POST :4001/api/v1/pdf/compress \\\n  -F "file=@slides.pdf" -F "image_quality=60" \\\n  -o compressed.pdf' },
-            { type: 'blank' },
-            { type: 'response', text: '✓ 200 OK — 8.4 MB → 2.1 MB (75% smaller)' }
-          ]
-        },
-        {
-          lines: [
-            { type: 'prompt', text: '$ ' },
-            { type: 'cmd', text: 'curl -X POST :4001/api/v1/pdf/from-images \\\n  -F "files=@scan1.jpg" -F "files=@scan2.jpg" \\\n  -o scans.pdf' },
-            { type: 'blank' },
-            { type: 'response', text: '✓ 200 OK — scans.pdf (1.5 MB, 2 pages)' }
-          ]
-        },
-        {
-          lines: [
-            { type: 'prompt', text: '$ ' },
-            { type: 'cmd', text: 'curl -X POST :4001/api/v1/text/hash \\\n  -H "Content-Type: application/json" \\\n  -d \'{"text":"hello","algorithm":"sha256"}\'' },
-            { type: 'blank' },
-            { type: 'response', text: '{"result":"2cf24dba5fb0a30e26e83b2ac5b9e29e…"}' }
-          ]
+      (function () {
+        /* ── Theme toggle ── */
+        var themeToggle = document.getElementById('themeToggle');
+        function getEffectiveTheme() {
+          var explicit = document.documentElement.getAttribute('data-theme');
+          if (explicit) return explicit;
+          return window.matchMedia('(prefers-color-scheme: light)').matches
+            ? 'light'
+            : 'dark';
         }
-      ];
+        function updateToggleIcon() {
+          var theme = getEffectiveTheme();
+          themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+          themeToggle.setAttribute(
+            'aria-label',
+            theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+          );
+        }
+        themeToggle.addEventListener('click', function () {
+          var next = getEffectiveTheme() === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          localStorage.setItem('theme', next);
+          updateToggleIcon();
+        });
+        updateToggleIcon();
 
-      var pre = document.getElementById('termPre');
-      var demoIdx = 0;
-      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        /* ── Portfolio nav ── */
+        if (
+          new URLSearchParams(location.search).get('ref') === 'portfolio'
+        ) {
+          var nav = document.getElementById('navHome');
+          if (nav) nav.removeAttribute('hidden');
+          document.body.classList.add('has-nav');
+          var back = document.getElementById('navBack');
+          if (back)
+            back.addEventListener('click', function (e) {
+              if (document.referrer && history.length > 1) {
+                e.preventDefault();
+                history.back();
+              }
+            });
+        }
 
-      function runDemo() {
-        var demo = demos[demoIdx];
-        demoIdx = (demoIdx + 1) % demos.length;
-        pre.innerHTML = '';
-        var lineIdx = 0;
+        /* ── Terminal typing animation ── */
+        var demos = [
+          {
+            lines: [
+              { type: 'prompt', text: '$ ' },
+              {
+                type: 'cmd',
+                text: 'curl -X POST localhost:4001/api/v1/pdf/merge \\\n    -F "files=@doc1.pdf" -F "files=@doc2.pdf" \\\n    -o merged.pdf',
+              },
+              { type: 'blank' },
+              {
+                type: 'response',
+                text: '✓ 200 OK — merged.pdf (340 KB, 8 pages)',
+              },
+            ],
+          },
+          {
+            lines: [
+              { type: 'prompt', text: '$ ' },
+              {
+                type: 'cmd',
+                text: 'curl -X POST localhost:4001/api/v1/image/resize/file \\\n    -F "file=@photo.png" -F "width=800" -F "height=600"',
+              },
+              { type: 'blank' },
+              {
+                type: 'response',
+                text: '✓ 200 OK — resized to 800×600',
+              },
+            ],
+          },
+          {
+            lines: [
+              { type: 'prompt', text: '$ ' },
+              {
+                type: 'cmd',
+                text: "curl -X POST localhost:4001/api/v1/text/hash \\\n    -H \"Content-Type: application/json\" \\\n    -d '{\"text\": \"hello\", \"algorithm\": \"sha256\"}'",
+              },
+              { type: 'blank' },
+              {
+                type: 'response',
+                text: '{"hash":"2cf24dba5fb0a30e26e83b2ac5b9e29e…"}',
+              },
+            ],
+          },
+        ];
 
-        function nextLine() {
-          if (lineIdx >= demo.lines.length) {
-            setTimeout(function () { pre.style.opacity = '1'; runDemo(); }, 2800);
-            return;
-          }
-          var line = demo.lines[lineIdx++];
-          if (line.type === 'blank') {
-            pre.appendChild(document.createTextNode('\n'));
-            nextLine();
-          } else if (line.type === 'prompt') {
-            var sp = document.createElement('span');
-            sp.className = 't-prompt';
-            sp.textContent = line.text;
-            pre.appendChild(sp);
-            nextLine();
-          } else if (line.type === 'cmd') {
-            if (reduceMotion) {
-              pre.appendChild(document.createTextNode(line.text + '\n'));
-              nextLine();
+        var pre = document.getElementById('termPre');
+        var demoIdx = 0;
+        var reduceMotion = window.matchMedia(
+          '(prefers-reduced-motion: reduce)'
+        ).matches;
+
+        function runDemo() {
+          var demo = demos[demoIdx];
+          demoIdx = (demoIdx + 1) % demos.length;
+          pre.innerHTML = '';
+          var lineIdx = 0;
+
+          function nextLine() {
+            if (lineIdx >= demo.lines.length) {
+              setTimeout(function () {
+                pre.style.opacity = '1';
+                runDemo();
+              }, 2800);
               return;
             }
-            var chars = line.text.split('');
-            var ci = 0;
-            var cursor = document.createElement('span');
-            cursor.className = 'cursor';
-            pre.appendChild(cursor);
-            function typeChar() {
-              if (ci >= chars.length) {
-                cursor.remove();
-                pre.appendChild(document.createTextNode('\n'));
+            var line = demo.lines[lineIdx++];
+            if (line.type === 'blank') {
+              pre.appendChild(document.createTextNode('\n'));
+              nextLine();
+            } else if (line.type === 'prompt') {
+              var sp = document.createElement('span');
+              sp.className = 't-prompt';
+              sp.textContent = line.text;
+              pre.appendChild(sp);
+              nextLine();
+            } else if (line.type === 'cmd') {
+              if (reduceMotion) {
+                pre.appendChild(
+                  document.createTextNode(line.text + '\n')
+                );
                 nextLine();
                 return;
               }
-              cursor.before(document.createTextNode(chars[ci++]));
-              setTimeout(typeChar, 18 + Math.random() * 14);
+              var chars = line.text.split('');
+              var ci = 0;
+              var cursor = document.createElement('span');
+              cursor.className = 'cursor';
+              pre.appendChild(cursor);
+              function typeChar() {
+                if (ci >= chars.length) {
+                  cursor.remove();
+                  pre.appendChild(document.createTextNode('\n'));
+                  nextLine();
+                  return;
+                }
+                cursor.before(document.createTextNode(chars[ci++]));
+                setTimeout(typeChar, 18 + Math.random() * 14);
+              }
+              typeChar();
+            } else if (line.type === 'response') {
+              var sp = document.createElement('span');
+              sp.className = 't-ok';
+              sp.textContent = line.text + '\n';
+              sp.style.opacity = '0';
+              pre.appendChild(sp);
+              setTimeout(function () {
+                sp.style.transition = 'opacity .3s';
+                sp.style.opacity = '1';
+              }, 120);
+              setTimeout(nextLine, 200);
             }
-            typeChar();
-          } else if (line.type === 'response') {
-            var sp = document.createElement('span');
-            sp.className = 't-ok';
-            sp.textContent = line.text + '\n';
-            sp.style.opacity = '0';
-            pre.appendChild(sp);
-            setTimeout(function () { sp.style.transition = 'opacity .3s'; sp.style.opacity = '1'; }, 120);
-            setTimeout(nextLine, 200);
           }
+          nextLine();
         }
-        nextLine();
-      }
-      runDemo();
+        runDemo();
 
-      /* ── Tabs ── */
-      var tabs = document.querySelectorAll('.tab-btn');
-      tabs.forEach(function (tab) {
-        tab.addEventListener('click', function () {
-          tabs.forEach(function (t) {
-            t.setAttribute('aria-selected', 'false');
-            document.getElementById(t.getAttribute('aria-controls')).classList.remove('active');
+        /* ── Tabs ── */
+        var tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(function (tab) {
+          tab.addEventListener('click', function () {
+            tabs.forEach(function (t) {
+              t.setAttribute('aria-selected', 'false');
+              document
+                .getElementById(t.getAttribute('aria-controls'))
+                .classList.remove('active');
+            });
+            tab.setAttribute('aria-selected', 'true');
+            document
+              .getElementById(tab.getAttribute('aria-controls'))
+              .classList.add('active');
           });
-          tab.setAttribute('aria-selected', 'true');
-          document.getElementById(tab.getAttribute('aria-controls')).classList.add('active');
-        });
-        tab.addEventListener('keydown', function (e) {
-          var idx = Array.from(tabs).indexOf(tab);
-          var next = -1;
-          if (e.key === 'ArrowRight') next = (idx + 1) % tabs.length;
-          else if (e.key === 'ArrowLeft') next = (idx - 1 + tabs.length) % tabs.length;
-          if (next >= 0) { e.preventDefault(); tabs[next].click(); tabs[next].focus(); }
-        });
-      });
-
-      /* ── Copy buttons ── */
-      document.querySelectorAll('.copy-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var code = btn.closest('.code-block').querySelector('code');
-          var text = code.textContent;
-          navigator.clipboard.writeText(text).then(function () {
-            btn.textContent = 'Copied!';
-            btn.classList.add('copied');
-            setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+          tab.addEventListener('keydown', function (e) {
+            var idx = Array.from(tabs).indexOf(tab);
+            var next = -1;
+            if (e.key === 'ArrowRight')
+              next = (idx + 1) % tabs.length;
+            else if (e.key === 'ArrowLeft')
+              next = (idx - 1 + tabs.length) % tabs.length;
+            if (next >= 0) {
+              e.preventDefault();
+              tabs[next].click();
+              tabs[next].focus();
+            }
           });
         });
-      });
 
-      /* ── Scroll reveal ── */
-      if (!reduceMotion && 'IntersectionObserver' in window) {
-        var obs = new IntersectionObserver(function (entries) {
-          entries.forEach(function (e) {
-            if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+        /* ── Copy buttons (Quick Start) ── */
+        document.querySelectorAll('.qs-copy').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var text = btn.getAttribute('data-copy');
+            navigator.clipboard.writeText(text).then(function () {
+              btn.textContent = 'Copied!';
+              btn.classList.add('copied');
+              setTimeout(function () {
+                btn.textContent = 'Copy';
+                btn.classList.remove('copied');
+              }, 1500);
+            });
           });
-        }, { threshold: 0.12 });
-        document.querySelectorAll('.reveal').forEach(function (el) { obs.observe(el); });
-      } else {
-        document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('visible'); });
-      }
-    })();
+        });
+
+        /* ── Scroll reveal ── */
+        if (!reduceMotion && 'IntersectionObserver' in window) {
+          var obs = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (e) {
+                if (e.isIntersecting) {
+                  e.target.classList.add('visible');
+                  obs.unobserve(e.target);
+                }
+              });
+            },
+            { threshold: 0.12 }
+          );
+          document.querySelectorAll('.reveal').forEach(function (el) {
+            obs.observe(el);
+          });
+        } else {
+          document.querySelectorAll('.reveal').forEach(function (el) {
+            el.classList.add('visible');
+          });
+        }
+      })();
     </script>
   </body>
 </html>

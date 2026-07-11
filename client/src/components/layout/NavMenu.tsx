@@ -15,6 +15,22 @@ import {
   IconHash,
   IconCode,
   IconCodeDots,
+  IconRotate,
+  IconDroplet,
+  IconFileExport,
+  IconNumbers,
+  IconShieldLock,
+  IconLayoutColumns,
+  IconCrop,
+  IconRotate2,
+  IconPhotoDown,
+  IconBrightnessUp,
+  IconArrowsExchange,
+  IconRegex,
+  IconBraces,
+  IconMinimize,
+  IconTable,
+  IconWand,
 } from '@tabler/icons-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -42,6 +58,11 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Unlock', path: '/pdf/unlock', icon: <IconLock size={ICON_SIZE} stroke={STROKE} /> },
       {
+        label: 'Protect',
+        path: '/pdf/protect',
+        icon: <IconShieldLock size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
         label: 'Info',
         path: '/pdf/info',
         icon: <IconInfoCircle size={ICON_SIZE} stroke={STROKE} />,
@@ -51,11 +72,36 @@ const NAV_GROUPS: NavGroup[] = [
         path: '/pdf/subset',
         icon: <IconCut size={ICON_SIZE} stroke={STROKE} />,
       },
+      {
+        label: 'Split',
+        path: '/pdf/split',
+        icon: <IconLayoutColumns size={ICON_SIZE} stroke={STROKE} />,
+      },
       { label: 'Merge', path: '/pdf/merge', icon: <IconFiles size={ICON_SIZE} stroke={STROKE} /> },
+      {
+        label: 'Rotate Pages',
+        path: '/pdf/rotate',
+        icon: <IconRotate size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
+        label: 'Add Watermark',
+        path: '/pdf/watermark',
+        icon: <IconDroplet size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
+        label: 'Add Page Numbers',
+        path: '/pdf/page-numbers',
+        icon: <IconNumbers size={ICON_SIZE} stroke={STROKE} />,
+      },
       {
         label: 'Images to PDF',
         path: '/pdf/from-images',
         icon: <IconPhotoPlus size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
+        label: 'PDF to Images',
+        path: '/pdf/to-images',
+        icon: <IconFileExport size={ICON_SIZE} stroke={STROKE} />,
       },
       {
         label: 'Compress',
@@ -75,9 +121,29 @@ const NAV_GROUPS: NavGroup[] = [
         icon: <IconResize size={ICON_SIZE} stroke={STROKE} />,
       },
       {
+        label: 'Crop',
+        path: '/image/crop',
+        icon: <IconCrop size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
+        label: 'Rotate / Flip',
+        path: '/image/rotate',
+        icon: <IconRotate2 size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
         label: 'Convert',
         path: '/image/convert',
         icon: <IconTransform size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
+        label: 'Compress',
+        path: '/image/compress',
+        icon: <IconPhotoDown size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
+        label: 'Adjust',
+        path: '/image/adjust',
+        icon: <IconBrightnessUp size={ICON_SIZE} stroke={STROKE} />,
       },
       {
         label: 'Info',
@@ -101,6 +167,36 @@ const NAV_GROUPS: NavGroup[] = [
         label: 'Decode',
         path: '/text/decode',
         icon: <IconCodeDots size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
+        label: 'Diff',
+        path: '/text/diff',
+        icon: <IconArrowsExchange size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
+        label: 'Regex Tester',
+        path: '/text/regex',
+        icon: <IconRegex size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
+        label: 'JSON Format',
+        path: '/text/json-format',
+        icon: <IconBraces size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
+        label: 'JSON Minify',
+        path: '/text/json-minify',
+        icon: <IconMinimize size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
+        label: 'CSV ↔ JSON',
+        path: '/text/csv-json',
+        icon: <IconTable size={ICON_SIZE} stroke={STROKE} />,
+      },
+      {
+        label: 'Generate',
+        path: '/text/generate',
+        icon: <IconWand size={ICON_SIZE} stroke={STROKE} />,
       },
     ],
   },

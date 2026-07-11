@@ -1,7 +1,8 @@
 import asyncio
 import io
 import os
-from typing import List
+import zipfile
+from typing import List, Optional
 
 import fitz  # PyMuPDF
 from fastapi import UploadFile
@@ -574,3 +575,538 @@ class PDFController:
         except Exception as e:
             print(f"Error creating PDF subset: {e}")
             return False
+
+    # ------------------------------------------------------------------
+    # Rotate
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    async def rotate_pdf(
+        file: UploadFile,
+        rotation: int,
+        pages: Optional[str] = None,
+    ) -> Response:
+        """Rotate specified pages of a PDF by the given degrees."""
+        if not file.filename or not file.filename.lower().endswith(".pdf"):
+            raise ValidationError("File must be a PDF", "file")
+
+        if rotation not in (90, 180, 270):
+            raise ValidationError(
+                "Rotation must be 90, 180, or 270 degrees",
+                "rotation",
+            )
+
+        temp_input_path = None
+        temp_output_path = None
+
+        try:
+            temp_input_path = FileHandler.create_temp_file(suffix=".pdf")
+            content = await file.read()
+            with open(temp_input_path, "wb") as temp_input:
+                temp_input.write(content)
+
+            temp_output_path = FileHandler.create_temp_file(suffix="_rotated.pdf")
+
+            PDFController._rotate_pdf_file(
+                temp_input_path,
+                temp_output_path,
+                rotation,
+                pages,
+            )
+
+            with open(temp_output_path, "rb") as out:
+                file_content = out.read()
+
+            asyncio.create_task(
+                FileHandler.cleanup_temp_files(temp_input_path, temp_output_path)
+            )
+
+            original_filename = file.filename or "document.pdf"
+            filename = f"rotated_{original_filename}"
+            return Response(
+                content=file_content,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": (f'attachment; filename="{filename}"'),
+                    "Content-Length": str(len(file_content)),
+                },
+            )
+
+        except (ValidationError, ProcessingError):
+            raise
+        except Exception as e:
+            if temp_input_path and os.path.exists(temp_input_path):
+                os.unlink(temp_input_path)
+            if temp_output_path and os.path.exists(temp_output_path):
+                os.unlink(temp_output_path)
+            raise ProcessingError(f"Error while rotating the PDF: {str(e)}")
+
+    @staticmethod
+    def _rotate_pdf_file(
+        input_file: str,
+        output_file: str,
+        rotation: int,
+        pages: Optional[str] = None,
+    ) -> None:
+        doc = fitz.open(input_file)
+        total = len(doc)
+
+        if pages is not None:
+            try:
+                page_nums = [int(p.strip()) for p in pages.split(",")]
+            except ValueError:
+                doc.close()
+                raise ValidationError(
+                    "Invalid pages format. Use "
+                    "comma-separated integers like '1,3,5'",
+                    "pages",
+                )
+            for p in page_nums:
+                if p < 1 or p > total:
+                    doc.close()
+                    raise ValidationError(
+                        f"Page {p} out of range. " f"PDF has {total} pages.",
+                        "pages",
+                    )
+            indices = [p - 1 for p in page_nums]
+        else:
+            indices = list(range(total))
+
+        for idx in indices:
+            page = doc[idx]
+            page.set_rotation(page.rotation + rotation)
+
+        doc.save(output_file)
+        doc.close()
+
+    # ------------------------------------------------------------------
+    # Watermark
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    async def watermark_pdf(
+        file: UploadFile,
+        text: str,
+        font_size: int,
+        opacity: float,
+        position: str,
+    ) -> Response:
+        """Add a text watermark to every page of a PDF."""
+        if not file.filename or not file.filename.lower().endswith(".pdf"):
+            raise ValidationError("File must be a PDF", "file")
+
+        if position not in ("center", "diagonal"):
+            raise ValidationError(
+                "Position must be 'center' or 'diagonal'",
+                "position",
+            )
+
+        temp_input_path = None
+        temp_output_path = None
+
+        try:
+            temp_input_path = FileHandler.create_temp_file(suffix=".pdf")
+            content = await file.read()
+            with open(temp_input_path, "wb") as temp_input:
+                temp_input.write(content)
+
+            temp_output_path = FileHandler.create_temp_file(suffix="_watermarked.pdf")
+
+            PDFController._watermark_pdf_file(
+                temp_input_path,
+                temp_output_path,
+                text,
+                font_size,
+                opacity,
+                position,
+            )
+
+            with open(temp_output_path, "rb") as out:
+                file_content = out.read()
+
+            asyncio.create_task(
+                FileHandler.cleanup_temp_files(temp_input_path, temp_output_path)
+            )
+
+            original_filename = file.filename or "document.pdf"
+            filename = f"watermarked_{original_filename}"
+            return Response(
+                content=file_content,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": (f'attachment; filename="{filename}"'),
+                    "Content-Length": str(len(file_content)),
+                },
+            )
+
+        except (ValidationError, ProcessingError):
+            raise
+        except Exception as e:
+            if temp_input_path and os.path.exists(temp_input_path):
+                os.unlink(temp_input_path)
+            if temp_output_path and os.path.exists(temp_output_path):
+                os.unlink(temp_output_path)
+            raise ProcessingError(f"Error while adding watermark: {str(e)}")
+
+    @staticmethod
+    def _watermark_pdf_file(
+        input_file: str,
+        output_file: str,
+        text: str,
+        font_size: int,
+        opacity: float,
+        position: str,
+    ) -> None:
+        doc = fitz.open(input_file)
+        color = (0.5, 0.5, 0.5)
+
+        for page in doc:
+            rect = page.rect
+            text_width = fitz.get_text_length(text, fontsize=font_size)
+            center = fitz.Point(rect.width / 2, rect.height / 2)
+            start = fitz.Point(center.x - text_width / 2, center.y)
+
+            tw = fitz.TextWriter(rect)
+            tw.append(start, text, fontsize=font_size)
+
+            if position == "diagonal":
+                morph = (center, fitz.Matrix(45))
+                tw.write_text(
+                    page,
+                    opacity=opacity,
+                    color=color,
+                    morph=morph,
+                )
+            else:
+                tw.write_text(page, opacity=opacity, color=color)
+
+        doc.save(output_file)
+        doc.close()
+
+    # ------------------------------------------------------------------
+    # PDF to Images
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    async def pdf_to_images(
+        file: UploadFile,
+        fmt: str,
+        dpi: int,
+    ) -> Response:
+        """Convert each PDF page to an image, returned as ZIP."""
+        if not file.filename or not file.filename.lower().endswith(".pdf"):
+            raise ValidationError("File must be a PDF", "file")
+
+        if fmt not in ("png", "jpeg"):
+            raise ValidationError("Format must be 'png' or 'jpeg'", "format")
+
+        temp_input_path = None
+
+        try:
+            temp_input_path = FileHandler.create_temp_file(suffix=".pdf")
+            content = await file.read()
+            with open(temp_input_path, "wb") as temp_input:
+                temp_input.write(content)
+
+            zip_bytes = PDFController._pdf_to_images(temp_input_path, fmt, dpi)
+
+            asyncio.create_task(FileHandler.cleanup_temp_files(temp_input_path))
+
+            original_name = file.filename or "document"
+            base_name = original_name.rsplit(".", 1)[0]
+            filename = f"{base_name}_images.zip"
+            return Response(
+                content=zip_bytes,
+                media_type="application/zip",
+                headers={
+                    "Content-Disposition": (f'attachment; filename="{filename}"'),
+                    "Content-Length": str(len(zip_bytes)),
+                },
+            )
+
+        except (ValidationError, ProcessingError):
+            raise
+        except Exception as e:
+            if temp_input_path and os.path.exists(temp_input_path):
+                os.unlink(temp_input_path)
+            raise ProcessingError(f"Error converting PDF to images: {str(e)}")
+
+    @staticmethod
+    def _pdf_to_images(
+        input_file: str,
+        fmt: str,
+        dpi: int,
+    ) -> bytes:
+        doc = fitz.open(input_file)
+        zip_buffer = io.BytesIO()
+        ext = "jpg" if fmt == "jpeg" else "png"
+
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            for i, page in enumerate(doc):
+                pix = page.get_pixmap(dpi=dpi, alpha=False)
+                if fmt == "jpeg":
+                    img = Image.frombytes(
+                        "RGB",
+                        (pix.width, pix.height),
+                        pix.samples,
+                    )
+                    img_buf = io.BytesIO()
+                    img.save(
+                        img_buf,
+                        format="JPEG",
+                        quality=95,
+                    )
+                    img_bytes = img_buf.getvalue()
+                else:
+                    img_bytes = pix.tobytes("png")
+                zf.writestr(f"page_{i + 1}.{ext}", img_bytes)
+
+        doc.close()
+        zip_buffer.seek(0)
+        return zip_buffer.getvalue()
+
+    # ------------------------------------------------------------------
+    # Add Page Numbers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    async def add_page_numbers(
+        file: UploadFile,
+        position: str,
+        start_number: int,
+        font_size: int,
+    ) -> Response:
+        """Stamp page numbers on each page of a PDF."""
+        if not file.filename or not file.filename.lower().endswith(".pdf"):
+            raise ValidationError("File must be a PDF", "file")
+
+        valid_positions = (
+            "bottom-center",
+            "bottom-right",
+            "bottom-left",
+        )
+        if position not in valid_positions:
+            raise ValidationError(
+                "Position must be 'bottom-center', " "'bottom-right', or 'bottom-left'",
+                "position",
+            )
+
+        temp_input_path = None
+        temp_output_path = None
+
+        try:
+            temp_input_path = FileHandler.create_temp_file(suffix=".pdf")
+            content = await file.read()
+            with open(temp_input_path, "wb") as temp_input:
+                temp_input.write(content)
+
+            temp_output_path = FileHandler.create_temp_file(suffix="_numbered.pdf")
+
+            PDFController._add_page_numbers_file(
+                temp_input_path,
+                temp_output_path,
+                position,
+                start_number,
+                font_size,
+            )
+
+            with open(temp_output_path, "rb") as out:
+                file_content = out.read()
+
+            asyncio.create_task(
+                FileHandler.cleanup_temp_files(temp_input_path, temp_output_path)
+            )
+
+            original_filename = file.filename or "document.pdf"
+            filename = f"numbered_{original_filename}"
+            return Response(
+                content=file_content,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": (f'attachment; filename="{filename}"'),
+                    "Content-Length": str(len(file_content)),
+                },
+            )
+
+        except (ValidationError, ProcessingError):
+            raise
+        except Exception as e:
+            if temp_input_path and os.path.exists(temp_input_path):
+                os.unlink(temp_input_path)
+            if temp_output_path and os.path.exists(temp_output_path):
+                os.unlink(temp_output_path)
+            raise ProcessingError(f"Error adding page numbers: {str(e)}")
+
+    @staticmethod
+    def _add_page_numbers_file(
+        input_file: str,
+        output_file: str,
+        position: str,
+        start_number: int,
+        font_size: int,
+    ) -> None:
+        doc = fitz.open(input_file)
+        margin = 36  # 0.5 inch
+
+        for i, page in enumerate(doc):
+            rect = page.rect
+            num_text = str(start_number + i)
+            text_width = fitz.get_text_length(num_text, fontsize=font_size)
+            y = rect.height - margin
+
+            if position == "bottom-center":
+                x = (rect.width - text_width) / 2
+            elif position == "bottom-right":
+                x = rect.width - margin - text_width
+            else:  # bottom-left
+                x = margin
+
+            page.insert_text(
+                fitz.Point(x, y),
+                num_text,
+                fontsize=font_size,
+                color=(0, 0, 0),
+            )
+
+        doc.save(output_file)
+        doc.close()
+
+    # ------------------------------------------------------------------
+    # Protect
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    async def protect_pdf(
+        file: UploadFile,
+        user_password: str,
+        owner_password: Optional[str] = None,
+        permissions: Optional[int] = None,
+    ) -> Response:
+        """Add password protection to a PDF."""
+        if not file.filename or not file.filename.lower().endswith(".pdf"):
+            raise ValidationError("File must be a PDF", "file")
+
+        effective_owner_pw = owner_password or user_password
+
+        temp_input_path = None
+        temp_output_path = None
+
+        try:
+            temp_input_path = FileHandler.create_temp_file(suffix=".pdf")
+            content = await file.read()
+            with open(temp_input_path, "wb") as temp_input:
+                temp_input.write(content)
+
+            temp_output_path = FileHandler.create_temp_file(suffix="_protected.pdf")
+
+            PDFController._protect_pdf_file(
+                temp_input_path,
+                temp_output_path,
+                user_password,
+                effective_owner_pw,
+                permissions,
+            )
+
+            with open(temp_output_path, "rb") as out:
+                file_content = out.read()
+
+            asyncio.create_task(
+                FileHandler.cleanup_temp_files(temp_input_path, temp_output_path)
+            )
+
+            original_filename = file.filename or "document.pdf"
+            filename = f"protected_{original_filename}"
+            return Response(
+                content=file_content,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": (f'attachment; filename="{filename}"'),
+                    "Content-Length": str(len(file_content)),
+                },
+            )
+
+        except (ValidationError, ProcessingError):
+            raise
+        except Exception as e:
+            if temp_input_path and os.path.exists(temp_input_path):
+                os.unlink(temp_input_path)
+            if temp_output_path and os.path.exists(temp_output_path):
+                os.unlink(temp_output_path)
+            raise ProcessingError(f"Error protecting the PDF: {str(e)}")
+
+    @staticmethod
+    def _protect_pdf_file(
+        input_file: str,
+        output_file: str,
+        user_password: str,
+        owner_password: str,
+        permissions: Optional[int] = None,
+    ) -> None:
+        doc = fitz.open(input_file)
+        save_kwargs: dict = {
+            "encryption": fitz.PDF_ENCRYPT_AES_256,
+            "user_pw": user_password,
+            "owner_pw": owner_password,
+        }
+        if permissions is not None:
+            save_kwargs["permissions"] = permissions
+        doc.save(output_file, **save_kwargs)
+        doc.close()
+
+    # ------------------------------------------------------------------
+    # Split
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    async def split_pdf(file: UploadFile) -> Response:
+        """Split each page into its own PDF, returned as ZIP."""
+        if not file.filename or not file.filename.lower().endswith(".pdf"):
+            raise ValidationError("File must be a PDF", "file")
+
+        temp_input_path = None
+
+        try:
+            temp_input_path = FileHandler.create_temp_file(suffix=".pdf")
+            content = await file.read()
+            with open(temp_input_path, "wb") as temp_input:
+                temp_input.write(content)
+
+            zip_bytes = PDFController._split_pdf_file(temp_input_path)
+
+            asyncio.create_task(FileHandler.cleanup_temp_files(temp_input_path))
+
+            original_name = file.filename or "document"
+            base_name = original_name.rsplit(".", 1)[0]
+            filename = f"{base_name}_split.zip"
+            return Response(
+                content=zip_bytes,
+                media_type="application/zip",
+                headers={
+                    "Content-Disposition": (f'attachment; filename="{filename}"'),
+                    "Content-Length": str(len(zip_bytes)),
+                },
+            )
+
+        except (ValidationError, ProcessingError):
+            raise
+        except Exception as e:
+            if temp_input_path and os.path.exists(temp_input_path):
+                os.unlink(temp_input_path)
+            raise ProcessingError(f"Error splitting the PDF: {str(e)}")
+
+    @staticmethod
+    def _split_pdf_file(input_file: str) -> bytes:
+        doc = fitz.open(input_file)
+        zip_buffer = io.BytesIO()
+
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            for i in range(len(doc)):
+                new_doc = fitz.open()
+                new_doc.insert_pdf(doc, from_page=i, to_page=i)
+                page_bytes = new_doc.tobytes()
+                new_doc.close()
+                zf.writestr(f"page_{i + 1}.pdf", page_bytes)
+
+        doc.close()
+        zip_buffer.seek(0)
+        return zip_buffer.getvalue()

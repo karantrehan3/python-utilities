@@ -3,14 +3,19 @@ from fastapi.responses import JSONResponse
 
 from src.app.routes.api.v1.image.controller import ImageController
 from src.app.routes.api.v1.image.validator import (
+    AdjustFileRequest,
+    CompressFileRequest,
     ConvertFileRequest,
     ConvertRequest,
+    CropFileRequest,
+    ImageCompressResponse,
     ImageInfoFileRequest,
     ImageInfoRequest,
     ImageInfoResponse,
     ImageResponse,
     ResizeFileRequest,
     ResizeRequest,
+    RotateFileRequest,
 )
 
 # Create the router
@@ -219,6 +224,200 @@ async def get_image_info_file(
         return JSONResponse(status_code=400, content={"detail": str(e)})
 
 
+@router.post(
+    "/crop/file",
+    response_model=ImageResponse,
+    summary="Crop Image (File Upload)",
+    description="Crop image from file upload to specified rectangle",
+)
+async def crop_image_file(
+    file: UploadFile = File(..., description="Image file to crop"),
+    left: int = Form(..., description="Left pixel coordinate", ge=0),
+    top: int = Form(..., description="Top pixel coordinate", ge=0),
+    right: int = Form(..., description="Right pixel coordinate", gt=0),
+    bottom: int = Form(..., description="Bottom pixel coordinate", gt=0),
+    format: str = Form("PNG", description="Output image format"),
+):
+    """
+    Crop image from file upload to the specified rectangle.
+
+    Args:
+        file: Uploaded image file
+        left: Left pixel coordinate of crop box
+        top: Top pixel coordinate of crop box
+        right: Right pixel coordinate of crop box
+        bottom: Bottom pixel coordinate of crop box
+        format: Output image format
+
+    Returns:
+        ImageResponse with the cropped image
+    """
+    try:
+        if not file.content_type or not file.content_type.startswith("image/"):
+            return JSONResponse(
+                status_code=400,
+                content={"detail": "File must be an image"},
+            )
+
+        file_data = await file.read()
+
+        request = CropFileRequest(
+            left=left,
+            top=top,
+            right=right,
+            bottom=bottom,
+            format=format,
+        )
+
+        return await ImageController.crop_image_file(request, file_data)
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"detail": str(e)})
+
+
+@router.post(
+    "/rotate/file",
+    response_model=ImageResponse,
+    summary="Rotate Image (File Upload)",
+    description="Rotate and optionally flip image from file upload",
+)
+async def rotate_image_file(
+    file: UploadFile = File(..., description="Image file to rotate"),
+    angle: int = Form(..., description="Rotation angle in degrees"),
+    flip_horizontal: bool = Form(False, description="Flip horizontally after rotation"),
+    flip_vertical: bool = Form(False, description="Flip vertically after rotation"),
+    format: str = Form("PNG", description="Output image format"),
+):
+    """
+    Rotate and optionally flip image from file upload.
+
+    Args:
+        file: Uploaded image file
+        angle: Rotation angle in degrees
+        flip_horizontal: Whether to flip horizontally
+        flip_vertical: Whether to flip vertically
+        format: Output image format
+
+    Returns:
+        ImageResponse with the rotated image
+    """
+    try:
+        if not file.content_type or not file.content_type.startswith("image/"):
+            return JSONResponse(
+                status_code=400,
+                content={"detail": "File must be an image"},
+            )
+
+        file_data = await file.read()
+
+        request = RotateFileRequest(
+            angle=angle,
+            flip_horizontal=flip_horizontal,
+            flip_vertical=flip_vertical,
+            format=format,
+        )
+
+        return await ImageController.rotate_image_file(request, file_data)
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"detail": str(e)})
+
+
+@router.post(
+    "/compress/file",
+    response_model=ImageCompressResponse,
+    summary="Compress Image (File Upload)",
+    description="Compress image from file upload at given quality",
+)
+async def compress_image_file(
+    file: UploadFile = File(..., description="Image file to compress"),
+    quality: int = Form(80, description="Compression quality (1-100)", ge=1, le=100),
+    format: str = Form("JPEG", description="Output format (JPEG or WEBP)"),
+):
+    """
+    Compress image from file upload at specified quality.
+
+    Args:
+        file: Uploaded image file
+        quality: Compression quality (1-100)
+        format: Output format (JPEG or WEBP)
+
+    Returns:
+        ImageCompressResponse with compressed image and size info
+    """
+    try:
+        if not file.content_type or not file.content_type.startswith("image/"):
+            return JSONResponse(
+                status_code=400,
+                content={"detail": "File must be an image"},
+            )
+
+        file_data = await file.read()
+
+        request = CompressFileRequest(
+            quality=quality,
+            format=format,
+        )
+
+        return await ImageController.compress_image_file(request, file_data)
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"detail": str(e)})
+
+
+@router.post(
+    "/adjust/file",
+    response_model=ImageResponse,
+    summary="Adjust Image (File Upload)",
+    description="Adjust image brightness, contrast, saturation, and sharpness",
+)
+async def adjust_image_file(
+    file: UploadFile = File(..., description="Image file to adjust"),
+    brightness: float = Form(
+        1.0, description="Brightness factor (1.0 = no change)", gt=0
+    ),
+    contrast: float = Form(1.0, description="Contrast factor (1.0 = no change)", gt=0),
+    saturation: float = Form(
+        1.0, description="Saturation factor (1.0 = no change)", gt=0
+    ),
+    sharpness: float = Form(
+        1.0, description="Sharpness factor (1.0 = no change)", gt=0
+    ),
+    format: str = Form("PNG", description="Output image format"),
+):
+    """
+    Adjust image brightness, contrast, saturation, and sharpness.
+
+    Args:
+        file: Uploaded image file
+        brightness: Brightness factor (1.0 = no change)
+        contrast: Contrast factor (1.0 = no change)
+        saturation: Saturation factor (1.0 = no change)
+        sharpness: Sharpness factor (1.0 = no change)
+        format: Output image format
+
+    Returns:
+        ImageResponse with the adjusted image
+    """
+    try:
+        if not file.content_type or not file.content_type.startswith("image/"):
+            return JSONResponse(
+                status_code=400,
+                content={"detail": "File must be an image"},
+            )
+
+        file_data = await file.read()
+
+        request = AdjustFileRequest(
+            brightness=brightness,
+            contrast=contrast,
+            saturation=saturation,
+            sharpness=sharpness,
+            format=format,
+        )
+
+        return await ImageController.adjust_image_file(request, file_data)
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"detail": str(e)})
+
+
 @router.get(
     "/",
     summary="Image Utilities Info",
@@ -233,15 +432,31 @@ async def get_image_utilities_info():
     """
     return {
         "utility": "Image Utilities",
-        "description": "Various image processing utilities (resize, convert, etc.)",
-        "version": "1.0.0",
+        "description": (
+            "Various image processing utilities "
+            "(resize, convert, crop, rotate, compress, adjust)"
+        ),
+        "version": "1.1.0",
         "endpoints": {
-            "resize": "POST /resize - Resize image to specified dimensions (base64/URL)",
-            "resize_file": "POST /resize/file - Resize image from file upload",
-            "convert": "POST /convert - Convert image to different format (base64/URL)",
-            "convert_file": "POST /convert/file - Convert image from file upload",
-            "info": "POST /info - Get image information (base64/URL)",
-            "info_file": "POST /info/file - Get image information from file upload",
-            "formats": "GET /formats - Get supported image formats",
+            "resize": ("POST /resize - Resize image " "(base64/URL)"),
+            "resize_file": ("POST /resize/file - Resize image from file upload"),
+            "convert": ("POST /convert - Convert image format " "(base64/URL)"),
+            "convert_file": ("POST /convert/file - Convert image from " "file upload"),
+            "info": ("POST /info - Get image information " "(base64/URL)"),
+            "info_file": (
+                "POST /info/file - Get image information " "from file upload"
+            ),
+            "crop_file": ("POST /crop/file - Crop image from file upload"),
+            "rotate_file": (
+                "POST /rotate/file - Rotate/flip image " "from file upload"
+            ),
+            "compress_file": (
+                "POST /compress/file - Compress image " "from file upload"
+            ),
+            "adjust_file": (
+                "POST /adjust/file - Adjust brightness, "
+                "contrast, saturation, sharpness from file upload"
+            ),
+            "formats": ("GET /formats - Get supported image formats"),
         },
     }

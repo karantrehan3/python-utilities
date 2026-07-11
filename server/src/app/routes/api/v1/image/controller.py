@@ -3,12 +3,16 @@ import io
 from typing import Dict, Union
 
 import httpx
-from PIL import Image
+from PIL import Image, ImageEnhance
 
 from src.app.dependencies.common import ProcessingError, ValidationError
 from src.app.routes.api.v1.image.validator import (
+    AdjustFileRequest,
+    CompressFileRequest,
     ConvertFileRequest,
     ConvertRequest,
+    CropFileRequest,
+    ImageCompressResponse,
     ImageFileRequest,
     ImageInfoFileRequest,
     ImageInfoRequest,
@@ -17,6 +21,7 @@ from src.app.routes.api.v1.image.validator import (
     ImageResponse,
     ResizeFileRequest,
     ResizeRequest,
+    RotateFileRequest,
 )
 
 
@@ -545,6 +550,212 @@ class ImageController:
             raise
         except Exception as e:
             raise ProcessingError(f"Error getting image info: {str(e)}")
+
+    @staticmethod
+    async def crop_image_file(
+        request: CropFileRequest, file_data: bytes
+    ) -> ImageResponse:
+        """
+        Crop image from file upload to specified rectangle.
+
+        Args:
+            request: Crop request with box coordinates
+            file_data: Uploaded file data
+
+        Returns:
+            ImageResponse with the cropped image
+        """
+        try:
+            if request.format.upper() not in ImageController.SUPPORTED_FORMATS:
+                raise ValidationError(
+                    f"Unsupported image format. "
+                    f"Supported: {ImageController.SUPPORTED_FORMATS}",
+                    "format",
+                )
+
+            image = await ImageController._get_image_from_request_async(
+                request, file_data
+            )
+
+            width, height = image.size
+            if request.right > width or request.bottom > height:
+                raise ValidationError(
+                    f"Crop box ({request.left}, {request.top}, "
+                    f"{request.right}, {request.bottom}) exceeds "
+                    f"image dimensions ({width}x{height})",
+                    "crop_box",
+                )
+
+            cropped = image.crop(
+                (request.left, request.top, request.right, request.bottom)
+            )
+
+            result_data = ImageController._encode_image_to_base64(
+                cropped, request.format
+            )
+
+            return ImageResponse(
+                result=result_data,
+                format=request.format.upper(),
+                size=len(result_data),
+            )
+
+        except ValidationError:
+            raise
+        except Exception as e:
+            raise ProcessingError(f"Error cropping image: {str(e)}")
+
+    @staticmethod
+    async def rotate_image_file(
+        request: RotateFileRequest, file_data: bytes
+    ) -> ImageResponse:
+        """
+        Rotate and optionally flip image from file upload.
+
+        Args:
+            request: Rotate request with angle and flip flags
+            file_data: Uploaded file data
+
+        Returns:
+            ImageResponse with the rotated image
+        """
+        try:
+            if request.format.upper() not in ImageController.SUPPORTED_FORMATS:
+                raise ValidationError(
+                    f"Unsupported image format. "
+                    f"Supported: {ImageController.SUPPORTED_FORMATS}",
+                    "format",
+                )
+
+            image = await ImageController._get_image_from_request_async(
+                request, file_data
+            )
+
+            rotated = image.rotate(request.angle, expand=True)
+
+            if request.flip_horizontal:
+                rotated = rotated.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+            if request.flip_vertical:
+                rotated = rotated.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+
+            result_data = ImageController._encode_image_to_base64(
+                rotated, request.format
+            )
+
+            return ImageResponse(
+                result=result_data,
+                format=request.format.upper(),
+                size=len(result_data),
+            )
+
+        except ValidationError:
+            raise
+        except Exception as e:
+            raise ProcessingError(f"Error rotating image: {str(e)}")
+
+    @staticmethod
+    async def compress_image_file(
+        request: CompressFileRequest, file_data: bytes
+    ) -> ImageCompressResponse:
+        """
+        Compress image from file upload at given quality.
+
+        Args:
+            request: Compress request with quality and format
+            file_data: Uploaded file data
+
+        Returns:
+            ImageCompressResponse with compressed image and sizes
+        """
+        try:
+            image = await ImageController._get_image_from_request_async(
+                request, file_data
+            )
+
+            original_size = len(file_data)
+
+            # Ensure RGB mode for JPEG
+            if request.format.upper() == "JPEG" and image.mode in ("RGBA", "LA", "P"):
+                background = Image.new("RGB", image.size, (255, 255, 255))
+                if image.mode == "P":
+                    image = image.convert("RGBA")
+                background.paste(
+                    image,
+                    mask=(image.split()[-1] if image.mode == "RGBA" else None),
+                )
+                image = background
+
+            buffer = io.BytesIO()
+            image.save(
+                buffer,
+                format=request.format.upper(),
+                quality=request.quality,
+                optimize=True,
+            )
+            buffer.seek(0)
+            compressed_bytes = buffer.getvalue()
+            compressed_size = len(compressed_bytes)
+
+            result_data = base64.b64encode(compressed_bytes).decode("utf-8")
+
+            return ImageCompressResponse(
+                result=result_data,
+                format=request.format.upper(),
+                size=len(result_data),
+                original_size=original_size,
+                compressed_size=compressed_size,
+            )
+
+        except ValidationError:
+            raise
+        except Exception as e:
+            raise ProcessingError(f"Error compressing image: {str(e)}")
+
+    @staticmethod
+    async def adjust_image_file(
+        request: AdjustFileRequest, file_data: bytes
+    ) -> ImageResponse:
+        """
+        Adjust image brightness, contrast, saturation, and sharpness.
+
+        Args:
+            request: Adjust request with enhancement factors
+            file_data: Uploaded file data
+
+        Returns:
+            ImageResponse with the adjusted image
+        """
+        try:
+            if request.format.upper() not in ImageController.SUPPORTED_FORMATS:
+                raise ValidationError(
+                    f"Unsupported image format. "
+                    f"Supported: {ImageController.SUPPORTED_FORMATS}",
+                    "format",
+                )
+
+            image = await ImageController._get_image_from_request_async(
+                request, file_data
+            )
+
+            # Apply enhancements in order:
+            # brightness -> contrast -> saturation -> sharpness
+            image = ImageEnhance.Brightness(image).enhance(request.brightness)
+            image = ImageEnhance.Contrast(image).enhance(request.contrast)
+            image = ImageEnhance.Color(image).enhance(request.saturation)
+            image = ImageEnhance.Sharpness(image).enhance(request.sharpness)
+
+            result_data = ImageController._encode_image_to_base64(image, request.format)
+
+            return ImageResponse(
+                result=result_data,
+                format=request.format.upper(),
+                size=len(result_data),
+            )
+
+        except ValidationError:
+            raise
+        except Exception as e:
+            raise ProcessingError(f"Error adjusting image: {str(e)}")
 
     @staticmethod
     def get_supported_formats() -> Dict[str, str]:

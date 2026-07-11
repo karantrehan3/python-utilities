@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -183,6 +183,147 @@ class ImageInfoResponse(BaseModel):
                 "dimensions": "100x100",
                 "width": 100,
                 "height": 100,
+            }
+        }
+    }
+
+
+class CropFileRequest(ImageFileRequest):
+    """Request model for image crop operations with file upload"""
+
+    left: int = Field(..., description="Left pixel coordinate of crop box", ge=0)
+    top: int = Field(..., description="Top pixel coordinate of crop box", ge=0)
+    right: int = Field(..., description="Right pixel coordinate of crop box", gt=0)
+    bottom: int = Field(..., description="Bottom pixel coordinate of crop box", gt=0)
+
+    @model_validator(mode="after")
+    def validate_crop_box(self):
+        """Ensure crop box coordinates are valid"""
+        if self.right <= self.left:
+            raise ValueError("right must be greater than left")
+        if self.bottom <= self.top:
+            raise ValueError("bottom must be greater than top")
+        return self
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "format": "PNG",
+                "left": 10,
+                "top": 10,
+                "right": 200,
+                "bottom": 200,
+            }
+        }
+    }
+
+
+class RotateFileRequest(ImageFileRequest):
+    """Request model for image rotate operations with file upload"""
+
+    angle: int = Field(..., description="Rotation angle in degrees")
+    flip_horizontal: bool = Field(
+        False, description="Flip image horizontally after rotation"
+    )
+    flip_vertical: bool = Field(
+        False, description="Flip image vertically after rotation"
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "format": "PNG",
+                "angle": 90,
+                "flip_horizontal": False,
+                "flip_vertical": False,
+            }
+        }
+    }
+
+
+COMPRESS_FORMATS: List[str] = ["JPEG", "WEBP"]
+
+
+class CompressFileRequest(ImageFileRequest):
+    """Request model for image compress operations with file upload"""
+
+    quality: int = Field(
+        80,
+        description="Compression quality (1-100)",
+        ge=1,
+        le=100,
+    )
+    format: str = Field("JPEG", description="Output format (JPEG or WEBP)")
+
+    @field_validator("format")
+    @classmethod
+    def validate_compress_format(cls, v: str) -> str:
+        """Only JPEG and WEBP support quality-based compression"""
+        if v.upper() not in COMPRESS_FORMATS:
+            raise ValueError(f"Compress format must be one of {COMPRESS_FORMATS}")
+        return v.upper()
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "format": "JPEG",
+                "quality": 80,
+            }
+        }
+    }
+
+
+class ImageCompressResponse(ImageResponse):
+    """Response model for image compress operations"""
+
+    original_size: int = Field(..., description="Original file size in bytes")
+    compressed_size: int = Field(..., description="Compressed file size in bytes")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "result": "base64_encoded_image_data",
+                "format": "JPEG",
+                "size": 512,
+                "original_size": 2048,
+                "compressed_size": 512,
+            }
+        }
+    }
+
+
+class AdjustFileRequest(ImageFileRequest):
+    """Request model for image adjustment operations with file upload"""
+
+    brightness: float = Field(
+        1.0,
+        description="Brightness factor (1.0 = no change)",
+        gt=0,
+    )
+    contrast: float = Field(
+        1.0,
+        description="Contrast factor (1.0 = no change)",
+        gt=0,
+    )
+    saturation: float = Field(
+        1.0,
+        description="Saturation factor (1.0 = no change)",
+        gt=0,
+    )
+    sharpness: float = Field(
+        1.0,
+        description="Sharpness factor (1.0 = no change)",
+        gt=0,
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "format": "PNG",
+                "brightness": 1.2,
+                "contrast": 1.1,
+                "saturation": 1.0,
+                "sharpness": 1.0,
             }
         }
     }

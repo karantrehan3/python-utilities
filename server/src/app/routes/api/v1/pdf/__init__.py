@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, File, Form, UploadFile
 
@@ -133,6 +133,128 @@ async def compress_pdf_info(
     return stats
 
 
+@router.post(
+    "/rotate",
+    summary="Rotate PDF Pages",
+    description=("Rotate specified pages of a PDF " "by 90, 180, or 270 degrees"),
+    response_description="Rotated PDF file for download",
+)
+async def rotate_pdf(
+    file: UploadFile = File(..., description="The PDF file"),
+    rotation: int = Form(
+        ...,
+        description="Rotation degrees (90, 180, or 270)",
+    ),
+    pages: Optional[str] = Form(
+        None,
+        description=(
+            "Comma-separated page numbers to rotate "
+            "(e.g. '1,3,5'). Omit to rotate all pages."
+        ),
+    ),
+):
+    return await PDFController.rotate_pdf(file, rotation, pages)
+
+
+@router.post(
+    "/watermark",
+    summary="Add Watermark",
+    description=("Add a text watermark to every page of a PDF"),
+    response_description="Watermarked PDF file for download",
+)
+async def watermark_pdf(
+    file: UploadFile = File(..., description="The PDF file"),
+    text: str = Form(..., description="Watermark text"),
+    font_size: int = Form(48, description="Font size for the watermark"),
+    opacity: float = Form(
+        0.3,
+        description="Watermark opacity (0-1)",
+        ge=0,
+        le=1,
+    ),
+    position: str = Form(
+        "diagonal",
+        description=("Watermark position: 'center' or 'diagonal'"),
+    ),
+):
+    return await PDFController.watermark_pdf(file, text, font_size, opacity, position)
+
+
+@router.post(
+    "/to-images",
+    summary="PDF to Images",
+    description=("Convert each PDF page to an image, " "returned as a ZIP file"),
+    response_description="ZIP file containing page images",
+)
+async def pdf_to_images(
+    file: UploadFile = File(..., description="The PDF file"),
+    format: str = Form(
+        "png",
+        description="Image format: 'png' or 'jpeg'",
+    ),
+    dpi: int = Form(150, description="Image resolution in DPI"),
+):
+    return await PDFController.pdf_to_images(file, format, dpi)
+
+
+@router.post(
+    "/add-page-numbers",
+    summary="Add Page Numbers",
+    description=("Stamp page numbers on each page of a PDF"),
+    response_description="Numbered PDF file for download",
+)
+async def add_page_numbers(
+    file: UploadFile = File(..., description="The PDF file"),
+    position: str = Form(
+        "bottom-center",
+        description=("Position: 'bottom-center', " "'bottom-right', or 'bottom-left'"),
+    ),
+    start_number: int = Form(1, description="Starting page number"),
+    font_size: int = Form(12, description="Font size for page numbers"),
+):
+    return await PDFController.add_page_numbers(file, position, start_number, font_size)
+
+
+@router.post(
+    "/protect",
+    summary="Protect PDF",
+    description=("Add password protection to a PDF file"),
+    response_description="Protected PDF file for download",
+)
+async def protect_pdf(
+    file: UploadFile = File(..., description="The PDF file"),
+    user_password: str = Form(
+        ...,
+        description="Password required to open the PDF",
+    ),
+    owner_password: Optional[str] = Form(
+        None,
+        description=(
+            "Owner password for full access. " "Defaults to user_password if omitted."
+        ),
+    ),
+    permissions: Optional[int] = Form(
+        None,
+        description="PyMuPDF permission flags (integer)",
+    ),
+):
+    return await PDFController.protect_pdf(
+        file, user_password, owner_password, permissions
+    )
+
+
+@router.post(
+    "/split",
+    summary="Split PDF",
+    description=("Split each page into its own PDF, " "returned as a ZIP file"),
+    response_description=("ZIP file containing individual page PDFs"),
+)
+async def split_pdf(
+    file: UploadFile = File(..., description="The PDF file"),
+):
+    return await PDFController.split_pdf(file)
+
+
 @router.get(
     "/",
     summary="PDF Utilities Info",
@@ -142,14 +264,24 @@ async def get_pdf_utilities_info():
     return {
         "utility": "PDF Utilities",
         "description": "Various PDF processing utilities",
-        "version": "1.1.0",
+        "version": "2.0.0",
         "endpoints": {
-            "unlock": "POST /unlock - Unlock a password-protected PDF file",
-            "info": "POST /info - Get information about a PDF file",
-            "subset": "POST /subset - Extract a page range into a new PDF",
-            "merge": "POST /merge - Merge multiple PDFs into one",
-            "from_images": "POST /from-images - Combine images into a PDF",
-            "compress": "POST /compress - Compress a PDF (returns file)",
-            "compress_info": "POST /compress/info - Compress a PDF (returns stats JSON)",
+            "unlock": ("POST /unlock - " "Unlock a password-protected PDF"),
+            "info": ("POST /info - " "Get information about a PDF"),
+            "subset": ("POST /subset - " "Extract a page range into a new PDF"),
+            "merge": ("POST /merge - " "Merge multiple PDFs into one"),
+            "from_images": ("POST /from-images - " "Combine images into a PDF"),
+            "compress": ("POST /compress - " "Compress a PDF (returns file)"),
+            "compress_info": (
+                "POST /compress/info - " "Compress a PDF (returns stats JSON)"
+            ),
+            "rotate": ("POST /rotate - " "Rotate pages by 90/180/270 degrees"),
+            "watermark": ("POST /watermark - " "Add text watermark to every page"),
+            "to_images": ("POST /to-images - " "Convert pages to images (ZIP)"),
+            "add_page_numbers": (
+                "POST /add-page-numbers - " "Stamp page numbers on each page"
+            ),
+            "protect": ("POST /protect - " "Add password protection to a PDF"),
+            "split": ("POST /split - " "Split each page into its own PDF (ZIP)"),
         },
     }

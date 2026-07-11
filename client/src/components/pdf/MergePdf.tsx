@@ -19,7 +19,8 @@ import {
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { SortablePdfCard } from '../shared/SortablePdfCard';
-import { downloadFile } from '../../api/client';
+import { apiPost } from '../../api/client';
+import { PdfResultPreview } from '../shared/PdfResultPreview';
 
 interface PdfItem {
   id: string;
@@ -31,6 +32,7 @@ let nextId = 0;
 export function MergePdf() {
   const [items, setItems] = useState<PdfItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -42,6 +44,7 @@ export function MergePdf() {
       file,
     }));
     setItems((prev) => [...prev, ...newItems].slice(0, 20));
+    setResultBlob(null);
   }, []);
 
   const handleRemove = useCallback((id: string) => {
@@ -75,8 +78,14 @@ export function MergePdf() {
 
     setLoading(true);
     try {
-      await downloadFile('/pdf/merge', formData, 'merged.pdf');
-      notifications.show({ title: 'Success', message: 'Merged PDF downloaded.', color: 'green' });
+      const response = await apiPost('/pdf/merge', formData);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+        throw new Error(error.detail || `Request failed with status ${response.status}`);
+      }
+      const blob = await response.blob();
+      setResultBlob(blob);
+      notifications.show({ title: 'Success', message: 'PDFs merged.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to merge PDFs.';
       notifications.show({ title: 'Error', message, color: 'red' });
@@ -127,6 +136,8 @@ export function MergePdf() {
       <Button onClick={handleSubmit} loading={loading} disabled={items.length < 2} mt="0.5rem">
         Merge PDFs
       </Button>
+
+      {resultBlob && <PdfResultPreview blob={resultBlob} filename="merged.pdf" />}
     </Stack>
   );
 }

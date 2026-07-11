@@ -6,7 +6,8 @@ import { IconHash } from '@tabler/icons-react';
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
-import { downloadFile } from '../../api/client';
+import { apiPost } from '../../api/client';
+import { PdfResultPreview } from '../shared/PdfResultPreview';
 
 export function PageNumbersPdf() {
   const [file, setFile] = useState<FileWithPath | null>(null);
@@ -14,9 +15,11 @@ export function PageNumbersPdf() {
   const [startNumber, setStartNumber] = useState<number>(1);
   const [fontSize, setFontSize] = useState<number>(12);
   const [loading, setLoading] = useState(false);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   const handleFilesSelected = (files: FileWithPath[]) => {
     setFile(files[0] ?? null);
+    setResultBlob(null);
   };
 
   const handleSubmit = async () => {
@@ -37,9 +40,14 @@ export function PageNumbersPdf() {
 
     setLoading(true);
     try {
-      const outputName = file.name.replace(/\.pdf$/i, '_numbered.pdf');
-      await downloadFile('/pdf/add-page-numbers', formData, outputName);
-      notifications.show({ title: 'Success', message: 'Numbered PDF downloaded.', color: 'green' });
+      const response = await apiPost('/pdf/add-page-numbers', formData);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+        throw new Error(error.detail || `Request failed with status ${response.status}`);
+      }
+      const blob = await response.blob();
+      setResultBlob(blob);
+      notifications.show({ title: 'Success', message: 'Page numbers added.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to add page numbers.';
       notifications.show({ title: 'Error', message, color: 'red' });
@@ -92,6 +100,8 @@ export function PageNumbersPdf() {
       <Button onClick={handleSubmit} loading={loading} disabled={!file} mt="0.5rem">
         Add Page Numbers
       </Button>
+
+      {resultBlob && <PdfResultPreview blob={resultBlob} filename="numbered.pdf" />}
     </Stack>
   );
 }

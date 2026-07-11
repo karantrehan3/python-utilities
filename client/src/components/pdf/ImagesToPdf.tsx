@@ -15,7 +15,8 @@ import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortab
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { SortableImageCard } from '../shared/SortableImageCard';
-import { downloadFile } from '../../api/client';
+import { apiPost } from '../../api/client';
+import { PdfResultPreview } from '../shared/PdfResultPreview';
 
 const IMAGE_ACCEPT = [
   'image/png',
@@ -37,6 +38,7 @@ let nextId = 0;
 export function ImagesToPdf() {
   const [items, setItems] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -49,6 +51,7 @@ export function ImagesToPdf() {
       preview: URL.createObjectURL(file),
     }));
     setItems((prev) => [...prev, ...newItems].slice(0, 50));
+    setResultBlob(null);
   }, []);
 
   const handleRemove = useCallback((id: string) => {
@@ -82,8 +85,14 @@ export function ImagesToPdf() {
 
     setLoading(true);
     try {
-      await downloadFile('/pdf/from-images', formData, 'images.pdf');
-      notifications.show({ title: 'Success', message: 'PDF from images downloaded.', color: 'green' });
+      const response = await apiPost('/pdf/from-images', formData);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+        throw new Error(error.detail || `Request failed with status ${response.status}`);
+      }
+      const blob = await response.blob();
+      setResultBlob(blob);
+      notifications.show({ title: 'Success', message: 'PDF created from images.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to create PDF from images.';
       notifications.show({ title: 'Error', message, color: 'red' });
@@ -134,6 +143,8 @@ export function ImagesToPdf() {
       <Button onClick={handleSubmit} loading={loading} disabled={items.length === 0} mt="0.5rem">
         Create PDF
       </Button>
+
+      {resultBlob && <PdfResultPreview blob={resultBlob} filename="images.pdf" />}
     </Stack>
   );
 }

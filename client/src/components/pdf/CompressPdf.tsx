@@ -7,6 +7,7 @@ import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
 import { apiPost } from '../../api/client';
+import { PdfResultPreview } from '../shared/PdfResultPreview';
 
 interface CompressionStats {
   originalSize: string;
@@ -28,10 +29,12 @@ export function CompressPdf() {
   const [garbageCollect, setGarbageCollect] = useState(true);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<CompressionStats | null>(null);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   const handleFilesSelected = (files: FileWithPath[]) => {
     setFile(files[0] ?? null);
     setStats(null);
+    setResultBlob(null);
   };
 
   const handleSubmit = async () => {
@@ -61,14 +64,7 @@ export function CompressPdf() {
       const compressedSize = response.headers.get('X-Compressed-Size');
 
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = file.name.replace(/\.pdf$/i, '_compressed.pdf');
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setResultBlob(blob);
 
       if (originalSize && compressedSize) {
         const origBytes = parseInt(originalSize, 10);
@@ -84,7 +80,7 @@ export function CompressPdf() {
 
       notifications.show({
         title: 'Success',
-        message: 'Compressed PDF downloaded.',
+        message: 'PDF compressed successfully.',
         color: 'green',
       });
     } catch (error: unknown) {
@@ -143,6 +139,8 @@ export function CompressPdf() {
       <Button onClick={handleSubmit} loading={loading} disabled={!file} mt="0.5rem">
         Compress PDF
       </Button>
+
+      {resultBlob && file && <PdfResultPreview blob={resultBlob} filename={file.name.replace(/\.pdf$/i, '_compressed.pdf')} />}
 
       {stats && (
         <Paper withBorder p="1rem" mt="0.5rem">

@@ -6,16 +6,19 @@ import { IconRotate } from '@tabler/icons-react';
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
-import { downloadFile } from '../../api/client';
+import { apiPost } from '../../api/client';
+import { PdfResultPreview } from '../shared/PdfResultPreview';
 
 export function RotatePdf() {
   const [file, setFile] = useState<FileWithPath | null>(null);
   const [rotation, setRotation] = useState<string>('90');
   const [pages, setPages] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   const handleFilesSelected = (files: FileWithPath[]) => {
     setFile(files[0] ?? null);
+    setResultBlob(null);
   };
 
   const handleSubmit = async () => {
@@ -37,9 +40,14 @@ export function RotatePdf() {
 
     setLoading(true);
     try {
-      const outputName = file.name.replace(/\.pdf$/i, '_rotated.pdf');
-      await downloadFile('/pdf/rotate', formData, outputName);
-      notifications.show({ title: 'Success', message: 'Rotated PDF downloaded.', color: 'green' });
+      const response = await apiPost('/pdf/rotate', formData);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+        throw new Error(error.detail || `Request failed with status ${response.status}`);
+      }
+      const blob = await response.blob();
+      setResultBlob(blob);
+      notifications.show({ title: 'Success', message: 'PDF rotated successfully.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to rotate PDF.';
       notifications.show({ title: 'Error', message, color: 'red' });
@@ -84,6 +92,13 @@ export function RotatePdf() {
       <Button onClick={handleSubmit} loading={loading} disabled={!file} mt="0.5rem">
         Rotate PDF
       </Button>
+
+      {resultBlob && (
+        <PdfResultPreview
+          blob={resultBlob}
+          filename={file ? file.name.replace(/\.pdf$/i, '_rotated.pdf') : 'rotated.pdf'}
+        />
+      )}
     </Stack>
   );
 }

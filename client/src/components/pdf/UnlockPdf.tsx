@@ -6,15 +6,18 @@ import { IconLock } from '@tabler/icons-react';
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
-import { downloadFile } from '../../api/client';
+import { apiPost } from '../../api/client';
+import { PdfResultPreview } from '../shared/PdfResultPreview';
 
 export function UnlockPdf() {
   const [file, setFile] = useState<FileWithPath | null>(null);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   const handleFilesSelected = (files: FileWithPath[]) => {
     setFile(files[0] ?? null);
+    setResultBlob(null);
   };
 
   const handleSubmit = async () => {
@@ -41,9 +44,14 @@ export function UnlockPdf() {
 
     setLoading(true);
     try {
-      const outputName = file.name.replace(/\.pdf$/i, '_unlocked.pdf');
-      await downloadFile('/pdf/unlock', formData, outputName);
-      notifications.show({ title: 'Success', message: 'Unlocked PDF downloaded.', color: 'green' });
+      const response = await apiPost('/pdf/unlock', formData);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+        throw new Error(error.detail || `Request failed with status ${response.status}`);
+      }
+      const blob = await response.blob();
+      setResultBlob(blob);
+      notifications.show({ title: 'Success', message: 'PDF unlocked successfully.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to unlock PDF.';
       notifications.show({ title: 'Error', message, color: 'red' });
@@ -78,6 +86,13 @@ export function UnlockPdf() {
       <Button onClick={handleSubmit} loading={loading} disabled={!file || !password} mt="0.5rem">
         Unlock PDF
       </Button>
+
+      {resultBlob && (
+        <PdfResultPreview
+          blob={resultBlob}
+          filename={file ? file.name.replace(/\.pdf$/i, '_unlocked.pdf') : 'unlocked.pdf'}
+        />
+      )}
     </Stack>
   );
 }

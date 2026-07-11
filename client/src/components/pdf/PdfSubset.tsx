@@ -5,16 +5,19 @@ import type { FileWithPath } from '@mantine/dropzone';
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
-import { downloadFile } from '../../api/client';
+import { apiPost } from '../../api/client';
+import { PdfResultPreview } from '../shared/PdfResultPreview';
 
 export function PdfSubset() {
   const [file, setFile] = useState<FileWithPath | null>(null);
   const [startPage, setStartPage] = useState<number | string>(1);
   const [endPage, setEndPage] = useState<number | string>(1);
   const [loading, setLoading] = useState(false);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   const handleFilesSelected = (files: FileWithPath[]) => {
     setFile(files[0] ?? null);
+    setResultBlob(null);
   };
 
   const handleSubmit = async () => {
@@ -50,9 +53,14 @@ export function PdfSubset() {
 
     setLoading(true);
     try {
-      const outputName = file.name.replace(/\.pdf$/i, `_pages_${startPage}-${endPage}.pdf`);
-      await downloadFile('/pdf/subset', formData, outputName);
-      notifications.show({ title: 'Success', message: 'PDF subset downloaded.', color: 'green' });
+      const response = await apiPost('/pdf/subset', formData);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+        throw new Error(error.detail || `Request failed with status ${response.status}`);
+      }
+      const blob = await response.blob();
+      setResultBlob(blob);
+      notifications.show({ title: 'Success', message: 'PDF subset extracted successfully.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to extract PDF subset.';
       notifications.show({ title: 'Error', message, color: 'red' });
@@ -95,6 +103,17 @@ export function PdfSubset() {
       <Button onClick={handleSubmit} loading={loading} disabled={!file} mt="0.5rem">
         Extract Pages
       </Button>
+
+      {resultBlob && (
+        <PdfResultPreview
+          blob={resultBlob}
+          filename={
+            file
+              ? file.name.replace(/\.pdf$/i, `_pages_${startPage}-${endPage}.pdf`)
+              : 'subset.pdf'
+          }
+        />
+      )}
     </Stack>
   );
 }

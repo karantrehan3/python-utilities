@@ -25,3 +25,21 @@ class PDFInfoResponse(BaseModel):
             }
         }
     }
+
+
+class PDFCompressResponse(BaseModel):
+    """Response model for PDF compress operation"""
+
+    original_size: int = Field(..., description="Original file size in bytes")
+    compressed_size: int = Field(..., description="Compressed file size in bytes")
+    reduction_percent: float = Field(..., description="Size reduction percentage")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "original_size": 5242880,
+                "compressed_size": 2621440,
+                "reduction_percent": 50.0,
+            }
+        }
+    }

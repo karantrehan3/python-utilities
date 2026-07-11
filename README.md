@@ -51,6 +51,15 @@ python-utilities/
    - Create PDF subset (extract specific pages)
    - Endpoint: `POST /api/v1/pdf/subset`
    - Parameters: `file` (PDF file), `start_page` (integer), `end_page` (integer)
+   - Convert images to PDF
+   - Endpoint: `POST /api/v1/pdf/from-images`
+   - Parameters: `files` (multiple image files)
+   - Compress PDF
+   - Endpoint: `POST /api/v1/pdf/compress`
+   - Parameters: `file` (PDF file), `image_quality` (1-100, default 80), `garbage_collect` (boolean, default true)
+   - Compress PDF (stats only)
+   - Endpoint: `POST /api/v1/pdf/compress/info`
+   - Parameters: same as compress, returns JSON with size reduction stats
 
 2. **Text Utilities** (`/api/v1/text`)
 
@@ -135,6 +144,33 @@ data = {"password": "yourpassword"}
 response = requests.post(url, files=files, data=data)
 with open("unlocked.pdf", "wb") as f:
     f.write(response.content)
+```
+
+### Images to PDF
+
+```bash
+# Combine multiple images into a single PDF
+curl -X POST "http://localhost:4001/api/v1/pdf/from-images" \
+  -F "files=@page1.png" \
+  -F "files=@page2.jpg" \
+  -F "files=@page3.png" \
+  --output combined.pdf
+```
+
+### PDF Compress
+
+```bash
+# Compress a PDF (returns the compressed file)
+curl -X POST "http://localhost:4001/api/v1/pdf/compress" \
+  -F "file=@large.pdf" \
+  -F "image_quality=60" \
+  --output compressed.pdf
+
+# Get compression stats without downloading
+curl -X POST "http://localhost:4001/api/v1/pdf/compress/info" \
+  -F "file=@large.pdf" \
+  -F "image_quality=60"
+# Returns: {"original_size": 5242880, "compressed_size": 2621440, "reduction_percent": 50.0}
 ```
 
 ### Text Utilities

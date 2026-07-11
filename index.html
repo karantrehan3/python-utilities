@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Python Utilities API — PDF, image &amp; text processing in one server</title>
+    <meta
+      name="description"
+      content="A unified FastAPI server that bundles PDF, image, and text utilities behind a single API. Unlock, compress, convert, hash — one container, one port."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E"
+    />
+    <meta property="og:title" content="Python Utilities API" />
+    <meta
+      property="og:description"
+      content="PDF, image & text processing in one FastAPI server. Dockerised and ready to deploy."
+    />
+    <meta property="og:type" content="website" />
+    <style>
+      :root {
+        --bg: #0b0e14;
+        --surface: #141820;
+        --surface-2: #1a1f2b;
+        --line: #252b3a;
+        --text: #f0f2f8;
+        --muted: #8b93a8;
+        --accent: #38bdf8;
+        --accent-2: #7dd3fc;
+        --radius: 18px;
+        --space: clamp(4rem, 3rem + 5vw, 8rem);
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: inherit;
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+      }
+
+      /* Hero */
+      .hero {
+        position: relative;
+        text-align: center;
+        padding: clamp(4rem, 3rem + 6vw, 7rem) 0 var(--space);
+        overflow: hidden;
+      }
+      .hero::before {
+        content: '';
+        position: absolute;
+        inset: -40% 0 auto 0;
+        height: 540px;
+        background: radial-gradient(60% 60% at 50% 0%, rgba(56, 189, 248, 0.14), transparent 70%);
+        pointer-events: none;
+      }
+      .badge {
+        width: 132px;
+        height: 132px;
+        filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.55));
+      }
+      h1 {
+        font-size: clamp(2.6rem, 1.4rem + 5vw, 4.8rem);
+        letter-spacing: -0.03em;
+        margin: 1.4rem 0 0.4rem;
+        font-weight: 800;
+        line-height: 1.05;
+      }
+      .tagline {
+        color: var(--muted);
+        font-size: clamp(1.05rem, 0.95rem + 0.6vw, 1.4rem);
+        max-width: 44ch;
+        margin: 0 auto;
+      }
+      .cta {
+        display: flex;
+        gap: 0.8rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 2.2rem;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.85rem 1.6rem;
+        border-radius: 999px;
+        font-weight: 600;
+        text-decoration: none;
+        transition:
+          transform 0.2s var(--ease),
+          background 0.2s var(--ease),
+          border-color 0.2s var(--ease);
+        border: 1px solid transparent;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #0b0e14;
+      }
+      .btn-primary:hover {
+        background: var(--accent-2);
+      }
+      .btn-ghost {
+        border-color: var(--line);
+        color: var(--text);
+        background: var(--surface);
+      }
+      .btn-ghost:hover {
+        border-color: #3a4260;
+      }
+      .platforms {
+        margin-top: 1.4rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .platforms strong {
+        color: var(--accent-2);
+      }
+
+      /* Sections */
+      section {
+        padding: var(--space) 0;
+        border-top: 1px solid var(--line);
+      }
+      h2 {
+        font-size: clamp(1.6rem, 1.2rem + 1.5vw, 2.4rem);
+        letter-spacing: -0.02em;
+        margin: 0 0 2.2rem;
+      }
+      .grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        transition:
+          transform 0.25s var(--ease),
+          border-color 0.25s var(--ease);
+      }
+      .card:hover {
+        transform: translateY(-4px);
+        border-color: var(--accent);
+      }
+      .card h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.15rem;
+      }
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.96rem;
+      }
+      .ico {
+        font-size: 1.5rem;
+        margin-bottom: 0.7rem;
+        display: block;
+      }
+
+      /* Endpoint table */
+      .endpoint-group {
+        margin-bottom: 2rem;
+      }
+      .endpoint-group:last-child {
+        margin-bottom: 0;
+      }
+      .endpoint-group h3 {
+        font-size: 1.15rem;
+        margin: 0 0 0.8rem;
+        color: var(--accent-2);
+      }
+      .tbl-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+      }
+      th {
+        text-align: left;
+        color: var(--muted);
+        font-weight: 600;
+        padding: 0.6rem 1rem;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+      }
+      td {
+        padding: 0.55rem 1rem;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      td:first-child {
+        white-space: nowrap;
+      }
+      .method {
+        display: inline-block;
+        padding: 0.1rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        background: rgba(56, 189, 248, 0.12);
+        color: var(--accent-2);
+      }
+      .method-get {
+        background: rgba(52, 211, 153, 0.12);
+        color: #6ee7b7;
+      }
+
+      /* Code blocks */
+      code {
+        font-family: 'SF Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 0.1rem 0.4rem;
+        font-size: 0.85em;
+      }
+      pre {
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 1.1rem 1.3rem;
+        overflow-x: auto;
+        margin: 0;
+        font-size: 0.86rem;
+        line-height: 1.7;
+        color: var(--text);
+        font-family: 'SF Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
+      }
+      pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: inherit;
+      }
+      .c {
+        color: var(--muted);
+      }
+      .p {
+        color: var(--accent-2);
+      }
+
+      /* Quick start steps */
+      .steps {
+        display: grid;
+        gap: 1rem;
+        counter-reset: step;
+      }
+      .step {
+        display: flex;
+        gap: 1.1rem;
+        align-items: flex-start;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--accent);
+        border-radius: var(--radius);
+        padding: 1.2rem 1.5rem;
+        transition: border-color 0.25s var(--ease);
+      }
+      .step:hover {
+        border-left-color: var(--accent-2);
+      }
+      .step::before {
+        counter-increment: step;
+        content: counter(step);
+        flex: 0 0 auto;
+        width: 2.2rem;
+        height: 2.2rem;
+        border-radius: 50%;
+        background: rgba(56, 189, 248, 0.12);
+        color: var(--accent-2);
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+      }
+      .step p {
+        margin: 0;
+        color: var(--muted);
+      }
+      .step strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      /* Portfolio nav */
+      .nav-home {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 50;
+        display: flex;
+        gap: 0.5rem;
+      }
+      .nav-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        text-decoration: none;
+        color: var(--text);
+        background: color-mix(in srgb, var(--surface) 82%, transparent);
+        border: 1px solid var(--line);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        transition:
+          transform 0.2s var(--ease),
+          border-color 0.2s var(--ease),
+          background 0.2s var(--ease);
+      }
+      .nav-btn:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+      }
+
+      footer {
+        text-align: center;
+        color: var(--muted);
+        padding: 3rem 0;
+        border-top: 1px solid var(--line);
+        font-size: 0.9rem;
+      }
+      footer a {
+        color: var(--text);
+        text-decoration: none;
+        border-bottom: 1px solid var(--line);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav-home" id="navHome" hidden aria-label="Back to portfolio">
+      <a class="nav-btn" id="navBack" href="https://karantrehan3.github.io/" rel="noopener">← Back</a>
+      <a class="nav-btn" href="https://karantrehan3.github.io/" rel="noopener">⌂ Home</a>
+    </nav>
+    <header class="hero">
+      <div class="wrap">
+        <svg class="badge" viewBox="0 0 132 132" role="img" aria-label="Python Utilities API icon">
+          <defs>
+            <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#141820" />
+              <stop offset="1" stop-color="#0b0e14" />
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="128" height="128" rx="30" fill="url(#bg)" stroke="#252b3a" />
+          <!-- gear -->
+          <circle cx="66" cy="66" r="22" fill="none" stroke="#38bdf8" stroke-width="4" />
+          <circle cx="66" cy="66" r="9" fill="#38bdf8" />
+          <!-- gear teeth -->
+          <line x1="66" y1="38" x2="66" y2="44" stroke="#7dd3fc" stroke-width="5" stroke-linecap="round" />
+          <line x1="66" y1="88" x2="66" y2="94" stroke="#7dd3fc" stroke-width="5" stroke-linecap="round" />
+          <line x1="38" y1="66" x2="44" y2="66" stroke="#7dd3fc" stroke-width="5" stroke-linecap="round" />
+          <line x1="88" y1="66" x2="94" y2="66" stroke="#7dd3fc" stroke-width="5" stroke-linecap="round" />
+          <line x1="46.2" y1="46.2" x2="50.4" y2="50.4" stroke="#7dd3fc" stroke-width="5" stroke-linecap="round" />
+          <line x1="81.6" y1="81.6" x2="85.8" y2="85.8" stroke="#7dd3fc" stroke-width="5" stroke-linecap="round" />
+          <line x1="46.2" y1="85.8" x2="50.4" y2="81.6" stroke="#7dd3fc" stroke-width="5" stroke-linecap="round" />
+          <line x1="81.6" y1="50.4" x2="85.8" y2="46.2" stroke="#7dd3fc" stroke-width="5" stroke-linecap="round" />
+        </svg>
+        <h1>Python Utilities API</h1>
+        <p class="tagline">
+          PDF, image, and text processing — bundled into one FastAPI server.
+          Unlock, compress, convert, hash, resize — one container, one port.
+        </p>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/karantrehan3/python-utilities">View on GitHub</a>
+          <a class="btn btn-ghost" href="#endpoints">Explore endpoints</a>
+        </div>
+        <p class="platforms">
+          <strong>FastAPI</strong> · Dockerised · PyMuPDF · Pillow · Pydantic v2
+        </p>
+      </div>
+    </header>
+
+    <main>
+      <section id="features">
+        <div class="wrap">
+          <h2>What it does</h2>
+          <div class="grid">
+            <div class="card">
+              <span class="ico">📄</span>
+              <h3>PDF tools</h3>
+              <p>
+                Unlock password-protected files, extract page ranges, combine images into a PDF, and compress with tunable image quality.
+              </p>
+            </div>
+            <div class="card">
+              <span class="ico">🖼️</span>
+              <h3>Image tools</h3>
+              <p>
+                Resize, convert between formats, and inspect dimensions — via base64, URL, or direct file upload. Supports PNG, JPEG, WebP, GIF, BMP.
+              </p>
+            </div>
+            <div class="card">
+              <span class="ico">🔤</span>
+              <h3>Text tools</h3>
+              <p>
+                Hash text with MD5, SHA-256, and more. Encode and decode with Base64 and hex. Lightweight and zero-config.
+              </p>
+            </div>
+            <div class="card">
+              <span class="ico">🐳</span>
+              <h3>One container</h3>
+              <p>
+                All utilities share a single FastAPI process. One Docker image, one port, shared dependencies — no per-tool overhead.
+              </p>
+            </div>
+            <div class="card">
+              <span class="ico">📖</span>
+              <h3>Auto-documented</h3>
+              <p>
+                Built-in Swagger UI and ReDoc. Every endpoint has typed request/response schemas generated from Pydantic models.
+              </p>
+            </div>
+            <div class="card">
+              <span class="ico">🧩</span>
+              <h3>Easy to extend</h3>
+              <p>
+                Drop a new module into <code>routes/api/v1/</code>, wire it up in one line, and it inherits the full middleware stack.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="endpoints">
+        <div class="wrap">
+          <h2>Endpoints</h2>
+
+          <div class="endpoint-group">
+            <h3>PDF — <code>/api/v1/pdf</code></h3>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>/unlock</code></td><td><span class="method">POST</span></td><td>Unlock a password-protected PDF</td></tr>
+                  <tr><td><code>/info</code></td><td><span class="method">POST</span></td><td>Page count, encryption status, metadata</td></tr>
+                  <tr><td><code>/subset</code></td><td><span class="method">POST</span></td><td>Extract a page range into a new PDF</td></tr>
+                  <tr><td><code>/from-images</code></td><td><span class="method">POST</span></td><td>Combine images into a single PDF</td></tr>
+                  <tr><td><code>/compress</code></td><td><span class="method">POST</span></td><td>Compress a PDF (returns the file)</td></tr>
+                  <tr><td><code>/compress/info</code></td><td><span class="method">POST</span></td><td>Compress a PDF (returns size-reduction stats)</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="endpoint-group">
+            <h3>Image — <code>/api/v1/image</code></h3>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>/resize</code></td><td><span class="method">POST</span></td><td>Resize via base64 or URL</td></tr>
+                  <tr><td><code>/convert</code></td><td><span class="method">POST</span></td><td>Convert format via base64 or URL</td></tr>
+                  <tr><td><code>/info</code></td><td><span class="method">POST</span></td><td>Dimensions, format, size</td></tr>
+                  <tr><td><code>/resize/file</code></td><td><span class="method">POST</span></td><td>Resize from file upload</td></tr>
+                  <tr><td><code>/convert/file</code></td><td><span class="method">POST</span></td><td>Convert from file upload</td></tr>
+                  <tr><td><code>/info/file</code></td><td><span class="method">POST</span></td><td>Info from file upload</td></tr>
+                  <tr><td><code>/formats</code></td><td><span class="method method-get">GET</span></td><td>Supported image formats</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="endpoint-group">
+            <h3>Text — <code>/api/v1/text</code></h3>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>/hash</code></td><td><span class="method">POST</span></td><td>Hash text (MD5, SHA-256, etc.)</td></tr>
+                  <tr><td><code>/encode</code></td><td><span class="method">POST</span></td><td>Base64 / hex encode</td></tr>
+                  <tr><td><code>/decode</code></td><td><span class="method">POST</span></td><td>Base64 / hex decode</td></tr>
+                  <tr><td><code>/algorithms</code></td><td><span class="method method-get">GET</span></td><td>Supported hash algorithms</td></tr>
+                  <tr><td><code>/encodings</code></td><td><span class="method method-get">GET</span></td><td>Supported encodings</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="examples">
+        <div class="wrap">
+          <h2>Try it</h2>
+          <pre><code><span class="c"># combine images into a PDF</span>
+curl -X POST http://localhost:4001/api/v1/pdf/from-images \
+  -F <span class="p">"files=@page1.png"</span> -F <span class="p">"files=@page2.jpg"</span> \
+  -o combined.pdf
+
+<span class="c"># compress a PDF (tunable quality)</span>
+curl -X POST http://localhost:4001/api/v1/pdf/compress \
+  -F <span class="p">"file=@large.pdf"</span> -F <span class="p">"image_quality=60"</span> \
+  -o compressed.pdf
+
+<span class="c"># hash some text</span>
+curl -X POST http://localhost:4001/api/v1/text/hash \
+  -H "Content-Type: application/json" \
+  -d <span class="p">'{"text": "hello", "algorithm": "sha256"}'</span>
+
+<span class="c"># resize an image</span>
+curl -X POST http://localhost:4001/api/v1/image/resize/file \
+  -F <span class="p">"file=@photo.png"</span> -F <span class="p">"width=200"</span> -F <span class="p">"height=200"</span></code></pre>
+        </div>
+      </section>
+
+      <section id="start">
+        <div class="wrap">
+          <h2>Quick start</h2>
+          <div class="steps">
+            <div class="step">
+              <p>
+                <strong>Clone the repo.</strong>
+                <code>git clone https://github.com/karantrehan3/python-utilities.git</code>
+              </p>
+            </div>
+            <div class="step">
+              <p>
+                <strong>Start with Docker.</strong>
+                Run <code>make start</code> — builds the image and brings up the server on port 4001.
+              </p>
+            </div>
+            <div class="step">
+              <p>
+                <strong>Or run locally.</strong>
+                <code>make install-dev && make dev-reload</code> for uvicorn with hot-reload.
+              </p>
+            </div>
+            <div class="step">
+              <p>
+                <strong>Open the docs.</strong>
+                Visit <a href="http://localhost:4001/docs" style="color: var(--accent-2)">localhost:4001/docs</a> for the interactive Swagger UI.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <p>
+          Built with FastAPI &amp; Python ·
+          <a href="https://github.com/karantrehan3/python-utilities">GitHub</a> ·
+          <a href="https://github.com/karantrehan3/python-utilities/blob/master/LICENSE">MIT</a>
+        </p>
+        <p>&copy; 2025 Karan Trehan</p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        if (new URLSearchParams(location.search).get('ref') !== 'portfolio') return;
+        var nav = document.getElementById('navHome');
+        if (nav) nav.removeAttribute('hidden');
+        var back = document.getElementById('navBack');
+        if (back)
+          back.addEventListener('click', function (e) {
+            if (document.referrer && history.length > 1) {
+              e.preventDefault();
+              history.back();
+            }
+          });
+      })();
+    </script>
+  </body>
+</html>

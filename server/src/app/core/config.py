@@ -7,9 +7,9 @@ class Settings(BaseSettings):
     """Application settings"""
 
     # API Configuration
-    app_name: str = "Python Utilities API"
+    app_name: str = "Kiln API"
     app_version: str = "1.0.0"
-    app_description: str = "A unified API server for various Python utilities"
+    app_description: str = "A full-stack file and text processing toolkit API"
 
     # Server Configuration
     host: str = "0.0.0.0"

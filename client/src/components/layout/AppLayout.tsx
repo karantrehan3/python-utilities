@@ -33,7 +33,7 @@ export function AppLayout() {
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
             <IconTools size={24} stroke={1.5} />
             <Text fw={600} size="lg">
-              Python Utilities
+              Kiln
             </Text>
           </Group>
           <ActionIcon

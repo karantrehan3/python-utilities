@@ -1,4 +1,4 @@
-# [Python Utilities](https://karantrehan3.github.io/python-utilities/)
+# [Kiln](https://karantrehan3.github.io/kiln/)
 
 <p align="center">
   <img alt="python" src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white" />
@@ -14,7 +14,7 @@ Full-stack utility toolkit — a React frontend with a FastAPI backend for PDF, 
 ## Project structure
 
 ```
-python-utilities/
+kiln/
 ├── client/                 # React + Vite + Mantine UI
 │   ├── src/
 │   │   ├── components/     # PDF, Image, Text operation pages

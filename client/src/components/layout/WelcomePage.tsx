@@ -9,7 +9,7 @@ export function WelcomePage() {
           <IconTools size={32} />
         </ThemeIcon>
         <Text size="xl" fw={600}>
-          Python Utilities
+          Kiln
         </Text>
         <Text c="dimmed" ta="center" maw="25rem">
           Select a tool from the sidebar to get started. Upload files, process text, and transform

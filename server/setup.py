@@ -7,14 +7,14 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
     requirements = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
 
 setup(
-    name="python-utilities-api",
+    name="kiln-api",
     version="1.0.0",
     author="Your Name",
     author_email="your.email@example.com",
-    description="A unified API server for various Python utilities",
+    description="A full-stack file and text processing toolkit API",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/python-utilities",
+    url="https://github.com/karantrehan3/kiln",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     classifiers=[
@@ -39,7 +39,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "python-utilities-api=src.app.server:main",
+            "kiln-api=src.app.server:main",
         ],
     },
 )

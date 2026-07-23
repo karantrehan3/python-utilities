@@ -1,3 +1,19 @@
+/**
+ * Turn an error response body into a human-readable message. FastAPI returns
+ * `{ detail: ... }` where detail may be a string or an object like
+ * `{ message, error_type }` (our custom errors). Extracts the best message
+ * instead of stringifying an object to "[object Object]".
+ */
+export function apiErrorMessage(body: unknown, fallback: string): string {
+  const detail = (body as { detail?: unknown } | null)?.detail;
+  if (typeof detail === 'string') return detail;
+  if (detail && typeof detail === 'object') {
+    const message = (detail as { message?: unknown }).message;
+    if (typeof message === 'string') return message;
+  }
+  return fallback;
+}
+
 /** Decode a base64 string into a Blob of the given MIME type. */
 export function blobFromBase64(base64: string, mimeType: string): Blob {
   const binary = atob(base64);

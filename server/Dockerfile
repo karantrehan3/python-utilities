@@ -21,6 +21,10 @@ COPY . .
 # Add src to Python path
 ENV PYTHONPATH=/app/src
 
+# Run as a non-root user (defense in depth)
+RUN useradd --create-home --uid 10001 appuser && chown -R appuser:appuser /app
+USER appuser
+
 # Expose port
 EXPOSE 4001
 

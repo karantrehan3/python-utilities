@@ -9,7 +9,7 @@ import { PdfFilePreview } from '../shared/PdfFilePreview';
 import { apiPost } from '../../api/client';
 import { PdfResultPreview } from '../shared/PdfResultPreview';
 import { formatBytes } from '../../lib/format';
-import { filenameFromResponse, withSuffix } from '../../lib/download';
+import { apiErrorMessage, filenameFromResponse, withSuffix } from '../../lib/download';
 
 interface CompressionStats {
   originalSize: string;
@@ -52,8 +52,8 @@ export function CompressPdf() {
     try {
       const response = await apiPost('/pdf/compress', formData);
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
+        const body = await response.json().catch(() => null);
+        throw new Error(apiErrorMessage(body, `Request failed with status ${response.status}`));
       }
 
       const originalSize = response.headers.get('X-Original-Size');

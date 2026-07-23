@@ -16,11 +16,18 @@ class Settings(BaseSettings):
     port: int = 4001
     debug: bool = False
 
-    # CORS Configuration
+    # CORS Configuration.
+    # No credentials are used (no cookies/auth), so a wildcard origin is safe;
+    # set CORS_ORIGINS (comma-separated) to lock this down to your domains.
     cors_origins: List[str] = ["*"]
-    cors_allow_credentials: bool = True
-    cors_allow_methods: List[str] = ["*"]
+    cors_allow_credentials: bool = False
+    cors_allow_methods: List[str] = ["GET", "POST", "OPTIONS"]
     cors_allow_headers: List[str] = ["*"]
+
+    # Limits (defense against resource-exhaustion DoS)
+    max_upload_bytes: int = 50 * 1024 * 1024  # 50 MB, mirrors the nginx cap
+    max_pdf_pages: int = 2000  # cap fan-out operations (split, to-images)
+    max_image_pixels: int = 64_000_000  # ~64 MP, Pillow decompression-bomb guard
 
     # API Configuration
     api_prefix: str = "/api/v1"

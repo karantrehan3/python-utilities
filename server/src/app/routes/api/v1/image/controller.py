@@ -5,7 +5,12 @@ from typing import Dict, Union
 import httpx
 from PIL import Image, ImageEnhance
 
-from src.app.dependencies.common import ProcessingError, ValidationError
+from src.app.core.config import settings
+from src.app.dependencies.common import (
+    ProcessingError,
+    ValidationError,
+    validate_public_url,
+)
 from src.app.routes.api.v1.image.validator import (
     AdjustFileRequest,
     CompressFileRequest,
@@ -23,6 +28,9 @@ from src.app.routes.api.v1.image.validator import (
     ResizeRequest,
     RotateFileRequest,
 )
+
+# Guard against decompression bombs: cap the number of pixels Pillow will decode.
+Image.MAX_IMAGE_PIXELS = settings.max_image_pixels
 
 
 class ImageController:
@@ -44,8 +52,12 @@ class ImageController:
         Raises:
             ValidationError: If URL is invalid or download fails
         """
+        # Block SSRF: only allow URLs that resolve to public addresses.
+        validate_public_url(url)
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(
+                timeout=30.0, follow_redirects=False
+            ) as client:
                 response = await client.get(url)
                 response.raise_for_status()
 

@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -14,9 +14,32 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         description=settings.app_description,
         version=settings.app_version,
-        docs_url=settings.docs_url,
-        redoc_url=settings.redoc_url,
+        # Only expose interactive docs / schema when debugging.
+        docs_url=settings.docs_url if settings.debug else None,
+        redoc_url=settings.redoc_url if settings.debug else None,
+        openapi_url="/openapi.json" if settings.debug else None,
     )
+
+    # Reject oversized request bodies early (defense against memory-exhaustion
+    # DoS). This complements the nginx client_max_body_size for setups where the
+    # app is reachable directly.
+    @app.middleware("http")
+    async def limit_upload_size(request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > settings.max_upload_bytes:
+            return JSONResponse(
+                status_code=413,
+                content={
+                    "detail": {
+                        "message": (
+                            "File too large. Maximum upload size is "
+                            f"{settings.max_upload_bytes // (1024 * 1024)} MB."
+                        ),
+                        "error_type": "payload_too_large",
+                    }
+                },
+            )
+        return await call_next(request)
 
     # Add CORS middleware
     app.add_middleware(

@@ -8,7 +8,7 @@ import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
 import { apiPost } from '../../api/client';
 import { PdfResultPreview } from '../shared/PdfResultPreview';
-import { filenameFromResponse, withSuffix } from '../../lib/download';
+import { apiErrorMessage, filenameFromResponse, withSuffix } from '../../lib/download';
 
 export function UnlockPdf() {
   const [file, setFile] = useState<FileWithPath | null>(null);
@@ -48,8 +48,8 @@ export function UnlockPdf() {
     try {
       const response = await apiPost('/pdf/unlock', formData);
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
+        const body = await response.json().catch(() => null);
+        throw new Error(apiErrorMessage(body, `Request failed with status ${response.status}`));
       }
       const blob = await response.blob();
       setResultBlob(blob);

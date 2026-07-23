@@ -9,8 +9,12 @@ from fastapi import UploadFile
 from fastapi.responses import Response
 from PIL import Image
 
+from src.app.core.config import settings
 from src.app.dependencies.common import FileHandler, ProcessingError, ValidationError
 from src.app.routes.api.v1.pdf.validator import PDFCompressResponse, PDFInfoResponse
+
+# Guard against decompression bombs when rasterizing embedded/paged images.
+Image.MAX_IMAGE_PIXELS = settings.max_image_pixels
 
 
 class PDFController:
@@ -841,6 +845,11 @@ class PDFController:
         dpi: int,
     ) -> bytes:
         doc = fitz.open(input_file)
+        if len(doc) > settings.max_pdf_pages:
+            doc.close()
+            raise ValidationError(
+                f"PDF has too many pages (limit is {settings.max_pdf_pages})."
+            )
         zip_buffer = io.BytesIO()
         ext = "jpg" if fmt == "jpeg" else "png"
 
@@ -1100,6 +1109,11 @@ class PDFController:
     @staticmethod
     def _split_pdf_file(input_file: str) -> bytes:
         doc = fitz.open(input_file)
+        if len(doc) > settings.max_pdf_pages:
+            doc.close()
+            raise ValidationError(
+                f"PDF has too many pages (limit is {settings.max_pdf_pages})."
+            )
         zip_buffer = io.BytesIO()
 
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:

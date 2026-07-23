@@ -1,5 +1,5 @@
 import { apiPost } from '../../api/client';
-import { blobFromBase64 } from '../download';
+import { apiErrorMessage, blobFromBase64 } from '../download';
 import { mimeForFormat, type ImageResult } from './canvas';
 
 interface ImageApiResponse {
@@ -33,8 +33,8 @@ export async function imageViaBackend(
 
   const response = await apiPost(endpoint, formData);
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-    throw new Error(error.detail || `Request failed with status ${response.status}`);
+    const body = await response.json().catch(() => null);
+    throw new Error(apiErrorMessage(body, `Request failed with status ${response.status}`));
   }
 
   const data: ImageApiResponse = await response.json();

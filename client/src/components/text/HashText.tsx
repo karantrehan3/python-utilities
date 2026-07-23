@@ -13,11 +13,10 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCopy, IconCheck } from '@tabler/icons-react';
-import { apiPostJson } from '../../api/client';
 import { PageHeader } from '../shared/PageHeader';
+import { hashText, type HashAlgorithm } from '../../lib/text/hash';
 
 interface HashResponse {
-  text: string;
   algorithm: string;
   hash: string;
 }
@@ -49,8 +48,8 @@ export function HashText() {
 
     setLoading(true);
     try {
-      const response = await apiPostJson<HashResponse>('/text/hash', { text, algorithm });
-      setResult(response);
+      const hash = await hashText(text, algorithm as HashAlgorithm);
+      setResult({ algorithm, hash });
       notifications.show({
         title: 'Success',
         message: 'Text hashed successfully.',

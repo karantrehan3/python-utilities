@@ -13,11 +13,10 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCopy, IconCheck } from '@tabler/icons-react';
-import { apiPostJson } from '../../api/client';
 import { PageHeader } from '../shared/PageHeader';
+import { decodeText, type Encoding } from '../../lib/text/encoding';
 
 interface DecodeResponse {
-  original: string;
   encoding: string;
   result: string;
 }
@@ -46,16 +45,19 @@ export function DecodeText() {
 
     setLoading(true);
     try {
-      const response = await apiPostJson<DecodeResponse>('/text/decode', { text, encoding });
-      setResult(response);
+      const result = decodeText(text, encoding as Encoding);
+      setResult({ encoding, result });
       notifications.show({
         title: 'Success',
         message: 'Text decoded successfully.',
         color: 'green',
       });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
-      notifications.show({ title: 'Error', message, color: 'red' });
+    } catch {
+      notifications.show({
+        title: 'Error',
+        message: `Could not decode the input as ${encoding.toUpperCase()}. Check that it is valid.`,
+        color: 'red',
+      });
     } finally {
       setLoading(false);
     }

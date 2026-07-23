@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Button,
   Select,
@@ -19,15 +19,11 @@ import { IconFileZip, IconDownload, IconArrowDown } from '@tabler/icons-react';
 
 import { FileDropzone } from '../shared/FileDropzone';
 import { PageHeader } from '../shared/PageHeader';
-import { apiPost } from '../../api/client';
-
-interface ImageCompressResponse {
-  result: string;
-  format: string;
-  size: number;
-  original_size: number;
-  compressed_size: number;
-}
+import { useObjectUrl } from '../../hooks/useObjectUrl';
+import { canRunClientSide, compressImage, type ImageResult } from '../../lib/image/canvas';
+import { imageViaBackend } from '../../lib/image/backend';
+import { downloadBlob, withSuffix } from '../../lib/download';
+import { formatBytes } from '../../lib/format';
 
 interface CompressionStats {
   originalSize: string;
@@ -41,49 +37,17 @@ const FORMAT_OPTIONS = [
   { value: 'WEBP', label: 'WEBP' },
 ];
 
-function downloadBase64Image(base64: string, format: string, filename: string): void {
-  const mimeMap: Record<string, string> = {
-    PNG: 'image/png',
-    JPEG: 'image/jpeg',
-    WEBP: 'image/webp',
-    BMP: 'image/bmp',
-    GIF: 'image/gif',
-    TIFF: 'image/tiff',
-  };
-  const mime = mimeMap[format.toUpperCase()] ?? 'application/octet-stream';
-  const byteString = atob(base64);
-  const bytes = new Uint8Array(byteString.length);
-  for (let i = 0; i < byteString.length; i++) {
-    bytes[i] = byteString.charCodeAt(i);
-  }
-  const blob = new Blob([bytes], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${units[i]}`;
-}
-
 export function CompressImage() {
   const [file, setFile] = useState<FileWithPath | null>(null);
   const [naturalDims, setNaturalDims] = useState<{ w: number; h: number } | null>(null);
   const [quality, setQuality] = useState(80);
   const [format, setFormat] = useState<string | null>('JPEG');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ImageCompressResponse | null>(null);
+  const [result, setResult] = useState<ImageResult | null>(null);
   const [stats, setStats] = useState<CompressionStats | null>(null);
 
-  const originalPreview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  const originalPreview = useObjectUrl(file);
+  const resultUrl = useObjectUrl(result?.blob ?? null);
 
   useEffect(() => {
     if (!originalPreview) {
@@ -98,7 +62,6 @@ export function CompressImage() {
   }, [originalPreview]);
 
   function handleFilesSelected(files: FileWithPath[]): void {
-    if (originalPreview) URL.revokeObjectURL(originalPreview);
     setFile(files[0] ?? null);
     setResult(null);
     setStats(null);
@@ -110,27 +73,30 @@ export function CompressImage() {
       return;
     }
 
+    const outFormat = format ?? 'JPEG';
     setLoading(true);
     setResult(null);
     setStats(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('quality', String(quality));
-      formData.append('format', format ?? 'JPEG');
+      let output: ImageResult;
+      let origBytes = file.size;
+      let compBytes: number;
 
-      const response = await apiPost('/image/compress/file', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
+      if (canRunClientSide(file, outFormat)) {
+        output = await compressImage(file, quality, outFormat);
+        compBytes = output.size;
+      } else {
+        const backend = await imageViaBackend('/image/compress/file', file, {
+          quality,
+          format: outFormat,
+        });
+        output = backend;
+        origBytes = backend.originalSize ?? file.size;
+        compBytes = backend.compressedSize ?? backend.size;
       }
+      setResult(output);
 
-      const data: ImageCompressResponse = await response.json();
-      setResult(data);
-
-      const origBytes = data.original_size;
-      const compBytes = data.compressed_size;
       const reduction = origBytes > 0 ? ((1 - compBytes / origBytes) * 100).toFixed(1) : '0';
       setStats({
         originalSize: formatBytes(origBytes),
@@ -148,9 +114,10 @@ export function CompressImage() {
     }
   }
 
-  const resultDataUri = result
-    ? `data:image/${(result.format ?? 'jpeg').toLowerCase()};base64,${result.result}`
-    : null;
+  function handleDownload(): void {
+    if (!result || !file) return;
+    downloadBlob(result.blob, withSuffix(file.name, 'compressed', result.format.toLowerCase()));
+  }
 
   return (
     <Stack gap="1rem">
@@ -247,27 +214,21 @@ export function CompressImage() {
             </Stack>
           </Group>
           <Progress.Root size="xl">
-            <Progress.Section
-              value={100 - stats.reductionPercent}
-              color="blue"
-            >
+            <Progress.Section value={Math.max(0, 100 - stats.reductionPercent)} color="blue">
               <Progress.Label>Compressed</Progress.Label>
             </Progress.Section>
-            <Progress.Section
-              value={stats.reductionPercent}
-              color="green"
-            >
+            <Progress.Section value={Math.max(0, stats.reductionPercent)} color="green">
               <Progress.Label>Saved</Progress.Label>
             </Progress.Section>
           </Progress.Root>
         </Paper>
       )}
 
-      {result && resultDataUri && (
+      {result && resultUrl && (
         <Paper withBorder p="1.5rem">
           <Text fw={500} mb="0.75rem">Compressed Image</Text>
           <MantineImage
-            src={resultDataUri}
+            src={resultUrl}
             alt="Compressed"
             mah="20rem"
             fit="contain"
@@ -278,9 +239,7 @@ export function CompressImage() {
             variant="light"
             leftSection={<IconDownload size={16} />}
             mt="1rem"
-            onClick={() =>
-              downloadBase64Image(result.result, result.format, `compressed.${result.format.toLowerCase()}`)
-            }
+            onClick={handleDownload}
           >
             Download Compressed Image
           </Button>

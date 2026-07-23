@@ -14,22 +14,10 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCopy, IconCheck } from '@tabler/icons-react';
-import { apiPostJson } from '../../api/client';
 import { PageHeader } from '../shared/PageHeader';
+import { testRegex, type RegexResult } from '../../lib/text/regex';
 
-interface MatchItem {
-  match: string;
-  start: number;
-  end: number;
-  groups: Record<string, string>;
-}
-
-interface RegexResponse {
-  pattern: string;
-  text: string;
-  matches: MatchItem[];
-  count: number;
-}
+type RegexResponse = RegexResult;
 
 export function RegexTester() {
   const [text, setText] = useState('');
@@ -50,7 +38,7 @@ export function RegexTester() {
 
     setLoading(true);
     try {
-      const response = await apiPostJson<RegexResponse>('/text/regex', { text, pattern, flags });
+      const response = testRegex(text, pattern, flags);
       setResult(response);
       notifications.show({
         title: 'Success',
@@ -58,8 +46,8 @@ export function RegexTester() {
         color: 'green',
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
-      notifications.show({ title: 'Error', message, color: 'red' });
+      const message = error instanceof Error ? error.message : 'Invalid regular expression.';
+      notifications.show({ title: 'Invalid pattern', message, color: 'red' });
     } finally {
       setLoading(false);
     }

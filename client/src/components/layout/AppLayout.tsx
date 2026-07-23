@@ -12,6 +12,7 @@ import { IconSun, IconMoon, IconTools } from '@tabler/icons-react';
 import { Outlet } from 'react-router-dom';
 
 import { NavMenu } from './NavMenu';
+import { AppFooter } from './AppFooter';
 
 export function AppLayout() {
   const [opened, { toggle }] = useDisclosure();
@@ -20,6 +21,7 @@ export function AppLayout() {
   return (
     <AppShell
       header={{ height: '3.5rem' }}
+      footer={{ height: '2.75rem' }}
       navbar={{
         width: '16rem',
         breakpoint: 'sm',
@@ -56,6 +58,10 @@ export function AppLayout() {
       <AppShell.Main>
         <Outlet />
       </AppShell.Main>
+
+      <AppShell.Footer>
+        <AppFooter />
+      </AppShell.Footer>
     </AppShell>
   );
 }

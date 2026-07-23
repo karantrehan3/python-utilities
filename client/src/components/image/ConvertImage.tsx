@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   Button,
   Select,
@@ -17,13 +17,11 @@ import { IconTransform, IconDownload } from '@tabler/icons-react';
 
 import { FileDropzone } from '../shared/FileDropzone';
 import { PageHeader } from '../shared/PageHeader';
-import { apiPost } from '../../api/client';
-
-interface ConvertResult {
-  result: string;
-  format: string;
-  size: number;
-}
+import { useObjectUrl } from '../../hooks/useObjectUrl';
+import { canRunClientSide, convertImage, type ImageResult } from '../../lib/image/canvas';
+import { imageViaBackend } from '../../lib/image/backend';
+import { downloadBlob, withSuffix } from '../../lib/download';
+import { formatBytes } from '../../lib/format';
 
 const FORMAT_OPTIONS = [
   { value: 'PNG', label: 'PNG' },
@@ -34,42 +32,16 @@ const FORMAT_OPTIONS = [
   { value: 'TIFF', label: 'TIFF' },
 ];
 
-function downloadBase64Image(base64: string, format: string, filename: string): void {
-  const mimeMap: Record<string, string> = {
-    PNG: 'image/png',
-    JPEG: 'image/jpeg',
-    WEBP: 'image/webp',
-    BMP: 'image/bmp',
-    GIF: 'image/gif',
-    TIFF: 'image/tiff',
-  };
-  const mime = mimeMap[format.toUpperCase()] ?? 'application/octet-stream';
-  const byteString = atob(base64);
-  const bytes = new Uint8Array(byteString.length);
-  for (let i = 0; i < byteString.length; i++) {
-    bytes[i] = byteString.charCodeAt(i);
-  }
-  const blob = new Blob([bytes], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
-}
-
 export function ConvertImage() {
   const [file, setFile] = useState<FileWithPath | null>(null);
   const [targetFormat, setTargetFormat] = useState<string | null>('PNG');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ConvertResult | null>(null);
+  const [result, setResult] = useState<ImageResult | null>(null);
 
-  const originalPreview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  const originalPreview = useObjectUrl(file);
+  const resultUrl = useObjectUrl(result?.blob ?? null);
 
   function handleFilesSelected(files: FileWithPath[]): void {
-    if (originalPreview) URL.revokeObjectURL(originalPreview);
     setFile(files[0] ?? null);
     setResult(null);
   }
@@ -88,19 +60,13 @@ export function ConvertImage() {
     setResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('target_format', targetFormat);
-      formData.append('format', targetFormat);
-
-      const response = await apiPost('/image/convert/file', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
-      }
-
-      const data: ConvertResult = await response.json();
-      setResult(data);
+      const output = canRunClientSide(file, targetFormat)
+        ? await convertImage(file, targetFormat)
+        : await imageViaBackend('/image/convert/file', file, {
+            target_format: targetFormat,
+            format: targetFormat,
+          });
+      setResult(output);
       notifications.show({ title: 'Success', message: 'Image converted successfully.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
@@ -110,9 +76,10 @@ export function ConvertImage() {
     }
   }
 
-  const resultDataUri = result
-    ? `data:image/${result.format.toLowerCase()};base64,${result.result}`
-    : null;
+  function handleDownload(): void {
+    if (!result || !file) return;
+    downloadBlob(result.blob, withSuffix(file.name, 'converted', result.format.toLowerCase()));
+  }
 
   return (
     <Stack gap="1rem">
@@ -142,7 +109,7 @@ export function ConvertImage() {
                 />
                 <Stack gap="0.25rem">
                   <Text size="sm" fw={500}>{file.name}</Text>
-                  <Text size="xs" c="dimmed">{(file.size / 1024).toFixed(1)} KB</Text>
+                  <Text size="xs" c="dimmed">{formatBytes(file.size)}</Text>
                 </Stack>
               </Group>
             </Paper>
@@ -162,7 +129,7 @@ export function ConvertImage() {
         </Stack>
       </Paper>
 
-      {result && resultDataUri && originalPreview && (
+      {result && resultUrl && originalPreview && (
         <Paper withBorder p="1.5rem">
           <Text fw={500} mb="0.75rem">Before / After</Text>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="1rem">
@@ -186,7 +153,7 @@ export function ConvertImage() {
                 <Badge variant="light" size="sm" color="green">{result.format}</Badge>
               </Group>
               <MantineImage
-                src={resultDataUri}
+                src={resultUrl}
                 alt="Converted"
                 mah="16rem"
                 fit="contain"
@@ -199,9 +166,7 @@ export function ConvertImage() {
             variant="light"
             leftSection={<IconDownload size={16} />}
             mt="1rem"
-            onClick={() =>
-              downloadBase64Image(result.result, result.format, `converted.${result.format.toLowerCase()}`)
-            }
+            onClick={handleDownload}
           >
             Download Converted Image
           </Button>

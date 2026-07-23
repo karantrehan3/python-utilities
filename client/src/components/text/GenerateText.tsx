@@ -15,12 +15,11 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCopy, IconCheck } from '@tabler/icons-react';
-import { apiPostJson } from '../../api/client';
 import { PageHeader } from '../shared/PageHeader';
+import { generateUuids, generateLorem, type LoremType } from '../../lib/text/generate';
 
 interface GenerateResponse {
   type: string;
-  count: number;
   result: string;
 }
 
@@ -40,12 +39,9 @@ export function GenerateText() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const body: Record<string, unknown> = { type, count };
-      if (type === 'lorem') {
-        body.lorem_type = loremType;
-      }
-      const response = await apiPostJson<GenerateResponse>('/text/generate', body);
-      setResult(response);
+      const result =
+        type === 'uuid' ? generateUuids(count) : generateLorem(loremType as LoremType, count);
+      setResult({ type, result });
       notifications.show({
         title: 'Success',
         message: 'Text generated successfully.',

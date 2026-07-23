@@ -13,11 +13,10 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCopy, IconCheck } from '@tabler/icons-react';
-import { apiPostJson } from '../../api/client';
 import { PageHeader } from '../shared/PageHeader';
+import { encodeText, type Encoding } from '../../lib/text/encoding';
 
 interface EncodeResponse {
-  original: string;
   encoding: string;
   result: string;
 }
@@ -46,8 +45,8 @@ export function EncodeText() {
 
     setLoading(true);
     try {
-      const response = await apiPostJson<EncodeResponse>('/text/encode', { text, encoding });
-      setResult(response);
+      const result = encodeText(text, encoding as Encoding);
+      setResult({ encoding, result });
       notifications.show({
         title: 'Success',
         message: 'Text encoded successfully.',

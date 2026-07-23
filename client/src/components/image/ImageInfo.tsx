@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   Button,
   Stack,
@@ -15,32 +15,18 @@ import { IconInfoCircle } from '@tabler/icons-react';
 
 import { FileDropzone } from '../shared/FileDropzone';
 import { PageHeader } from '../shared/PageHeader';
-import { apiPost } from '../../api/client';
-
-interface ImageInfoResult {
-  format: string;
-  size: number;
-  dimensions: string;
-  width: number;
-  height: number;
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
-}
+import { useObjectUrl } from '../../hooks/useObjectUrl';
+import { getImageInfo, type ImageInfoResult } from '../../lib/image/canvas';
+import { formatBytes } from '../../lib/format';
 
 export function ImageInfo() {
   const [file, setFile] = useState<FileWithPath | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ImageInfoResult | null>(null);
 
-  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  const preview = useObjectUrl(file);
 
   function handleFilesSelected(files: FileWithPath[]): void {
-    if (preview) URL.revokeObjectURL(preview);
     setFile(files[0] ?? null);
     setResult(null);
   }
@@ -55,17 +41,7 @@ export function ImageInfo() {
     setResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('format', 'json');
-
-      const response = await apiPost('/image/info/file', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
-      }
-
-      const data: ImageInfoResult = await response.json();
+      const data = await getImageInfo(file);
       setResult(data);
       notifications.show({ title: 'Success', message: 'Image info retrieved.', color: 'green' });
     } catch (error: unknown) {

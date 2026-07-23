@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Button,
   Select,
@@ -20,13 +20,10 @@ import { IconResize, IconDownload } from '@tabler/icons-react';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PageHeader } from '../shared/PageHeader';
 import { ResizableImage } from '../shared/ResizableImage';
-import { apiPost } from '../../api/client';
-
-interface ResizeResult {
-  result: string;
-  format: string;
-  size: number;
-}
+import { useObjectUrl } from '../../hooks/useObjectUrl';
+import { canRunClientSide, resizeImage, type ImageResult } from '../../lib/image/canvas';
+import { imageViaBackend } from '../../lib/image/backend';
+import { downloadBlob, withSuffix } from '../../lib/download';
 
 const FORMAT_OPTIONS = [
   { value: 'PNG', label: 'PNG' },
@@ -37,32 +34,6 @@ const FORMAT_OPTIONS = [
   { value: 'TIFF', label: 'TIFF' },
 ];
 
-function downloadBase64Image(base64: string, format: string, filename: string): void {
-  const mimeMap: Record<string, string> = {
-    PNG: 'image/png',
-    JPEG: 'image/jpeg',
-    WEBP: 'image/webp',
-    BMP: 'image/bmp',
-    GIF: 'image/gif',
-    TIFF: 'image/tiff',
-  };
-  const mime = mimeMap[format.toUpperCase()] ?? 'application/octet-stream';
-  const byteString = atob(base64);
-  const bytes = new Uint8Array(byteString.length);
-  for (let i = 0; i < byteString.length; i++) {
-    bytes[i] = byteString.charCodeAt(i);
-  }
-  const blob = new Blob([bytes], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
-}
-
 export function ResizeImage() {
   const [file, setFile] = useState<FileWithPath | null>(null);
   const [naturalDims, setNaturalDims] = useState<{ w: number; h: number } | null>(null);
@@ -71,9 +42,10 @@ export function ResizeImage() {
   const [maintainAspectRatio, setMaintainAspectRatio] = useState(true);
   const [format, setFormat] = useState<string | null>('PNG');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ResizeResult | null>(null);
+  const [result, setResult] = useState<ImageResult | null>(null);
 
-  const originalPreview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  const originalPreview = useObjectUrl(file);
+  const resultUrl = useObjectUrl(result?.blob ?? null);
 
   useEffect(() => {
     if (!originalPreview) {
@@ -90,7 +62,6 @@ export function ResizeImage() {
   }, [originalPreview]);
 
   function handleFilesSelected(files: FileWithPath[]): void {
-    if (originalPreview) URL.revokeObjectURL(originalPreview);
     setFile(files[0] ?? null);
     setResult(null);
   }
@@ -124,25 +95,20 @@ export function ResizeImage() {
       return;
     }
 
+    const outFormat = format ?? 'PNG';
     setLoading(true);
     setResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('width', String(width));
-      formData.append('height', String(height));
-      formData.append('maintain_aspect_ratio', String(maintainAspectRatio));
-      formData.append('format', format ?? 'PNG');
-
-      const response = await apiPost('/image/resize/file', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
-      }
-
-      const data: ResizeResult = await response.json();
-      setResult(data);
+      const output = canRunClientSide(file, outFormat)
+        ? await resizeImage(file, Number(width), Number(height), outFormat)
+        : await imageViaBackend('/image/resize/file', file, {
+            width: Number(width),
+            height: Number(height),
+            maintain_aspect_ratio: maintainAspectRatio,
+            format: outFormat,
+          });
+      setResult(output);
       notifications.show({ title: 'Success', message: 'Image resized successfully.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
@@ -152,9 +118,10 @@ export function ResizeImage() {
     }
   }
 
-  const resultDataUri = result
-    ? `data:image/${(result.format ?? 'png').toLowerCase()};base64,${result.result}`
-    : null;
+  function handleDownload(): void {
+    if (!result || !file) return;
+    downloadBlob(result.blob, withSuffix(file.name, 'resized', result.format.toLowerCase()));
+  }
 
   return (
     <Stack gap="1rem">
@@ -224,7 +191,7 @@ export function ResizeImage() {
         </Stack>
       </Paper>
 
-      {result && resultDataUri && originalPreview && (
+      {result && resultUrl && originalPreview && (
         <Paper withBorder p="1.5rem">
           <Text fw={500} mb="0.75rem">Before / After</Text>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="1rem">
@@ -247,7 +214,7 @@ export function ResizeImage() {
             <Stack gap="0.5rem" align="center">
               <Text size="sm" c="dimmed">Resized</Text>
               <MantineImage
-                src={resultDataUri}
+                src={resultUrl}
                 alt="Resized"
                 mah="16rem"
                 fit="contain"
@@ -257,7 +224,7 @@ export function ResizeImage() {
               <Group gap="0.5rem">
                 <Badge variant="light" size="sm">{result.format}</Badge>
                 <Badge variant="light" size="sm" color="blue">
-                  {width} x {height}
+                  {result.width} x {result.height}
                 </Badge>
               </Group>
             </Stack>
@@ -266,9 +233,7 @@ export function ResizeImage() {
             variant="light"
             leftSection={<IconDownload size={16} />}
             mt="1rem"
-            onClick={() =>
-              downloadBase64Image(result.result, result.format, `resized.${result.format.toLowerCase()}`)
-            }
+            onClick={handleDownload}
           >
             Download Resized Image
           </Button>

@@ -15,11 +15,10 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCopy, IconCheck } from '@tabler/icons-react';
-import { apiPostJson } from '../../api/client';
 import { PageHeader } from '../shared/PageHeader';
+import { formatJson } from '../../lib/text/json';
 
 interface JsonFormatResponse {
-  original: string;
   formatted: string;
   valid: boolean;
   error: string | null;
@@ -44,11 +43,8 @@ export function JsonFormat() {
 
     setLoading(true);
     try {
-      const response = await apiPostJson<JsonFormatResponse>('/text/json/format', {
-        text,
-        indent,
-        sort_keys: sortKeys,
-      });
+      const { valid, result: formatted, error } = formatJson(text, indent, sortKeys);
+      const response: JsonFormatResponse = { formatted, valid, error };
       setResult(response);
       if (response.valid) {
         notifications.show({

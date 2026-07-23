@@ -1,3 +1,13 @@
+/** Decode a base64 string into a Blob of the given MIME type. */
+export function blobFromBase64(base64: string, mimeType: string): Blob {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: mimeType });
+}
+
 /**
  * Trigger a browser download for a Blob under the given filename.
  * Centralises the anchor/objectURL dance so components don't repeat it.

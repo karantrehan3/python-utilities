@@ -16,13 +16,11 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCopy, IconCheck } from '@tabler/icons-react';
-import { apiPostJson } from '../../api/client';
 import { PageHeader } from '../shared/PageHeader';
+import { convertCsvJson, type CsvDirection } from '../../lib/text/csv';
 
 interface CsvJsonResponse {
-  original: string;
   result: string;
-  direction: string;
   rows: number;
 }
 
@@ -45,11 +43,7 @@ export function CsvJson() {
 
     setLoading(true);
     try {
-      const response = await apiPostJson<CsvJsonResponse>('/text/csv-json', {
-        text,
-        direction,
-        delimiter,
-      });
+      const response = convertCsvJson(text, direction as CsvDirection, delimiter);
       setResult(response);
       notifications.show({
         title: 'Success',
@@ -57,7 +51,10 @@ export function CsvJson() {
         color: 'green',
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Conversion failed. Check that the input is valid.';
       notifications.show({ title: 'Error', message, color: 'red' });
     } finally {
       setLoading(false);

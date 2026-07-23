@@ -34,6 +34,9 @@ import { JsonMinify } from './components/text/JsonMinify';
 import { CsvJson } from './components/text/CsvJson';
 import { GenerateText } from './components/text/GenerateText';
 
+import { PrivacyPolicy } from './components/legal/PrivacyPolicy';
+import { TermsAndConditions } from './components/legal/TermsAndConditions';
+
 export function App() {
   return (
     <Routes>
@@ -70,6 +73,9 @@ export function App() {
         <Route path="text/json-minify" element={<JsonMinify />} />
         <Route path="text/csv-json" element={<CsvJson />} />
         <Route path="text/generate" element={<GenerateText />} />
+
+        <Route path="privacy" element={<PrivacyPolicy />} />
+        <Route path="terms" element={<TermsAndConditions />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Button,
   Select,
@@ -18,13 +18,11 @@ import { IconCrop, IconDownload } from '@tabler/icons-react';
 
 import { FileDropzone } from '../shared/FileDropzone';
 import { PageHeader } from '../shared/PageHeader';
-import { apiPost } from '../../api/client';
-
-interface ImageResponse {
-  result: string;
-  format: string;
-  size: number;
-}
+import { useObjectUrl } from '../../hooks/useObjectUrl';
+import { canRunClientSide, cropImage, type ImageResult } from '../../lib/image/canvas';
+import { imageViaBackend } from '../../lib/image/backend';
+import { downloadBlob, withSuffix } from '../../lib/download';
+import { formatBytes } from '../../lib/format';
 
 const FORMAT_OPTIONS = [
   { value: 'PNG', label: 'PNG' },
@@ -35,39 +33,6 @@ const FORMAT_OPTIONS = [
   { value: 'TIFF', label: 'TIFF' },
 ];
 
-function downloadBase64Image(base64: string, format: string, filename: string): void {
-  const mimeMap: Record<string, string> = {
-    PNG: 'image/png',
-    JPEG: 'image/jpeg',
-    WEBP: 'image/webp',
-    BMP: 'image/bmp',
-    GIF: 'image/gif',
-    TIFF: 'image/tiff',
-  };
-  const mime = mimeMap[format.toUpperCase()] ?? 'application/octet-stream';
-  const byteString = atob(base64);
-  const bytes = new Uint8Array(byteString.length);
-  for (let i = 0; i < byteString.length; i++) {
-    bytes[i] = byteString.charCodeAt(i);
-  }
-  const blob = new Blob([bytes], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${units[i]}`;
-}
-
 export function CropImage() {
   const [file, setFile] = useState<FileWithPath | null>(null);
   const [naturalDims, setNaturalDims] = useState<{ w: number; h: number } | null>(null);
@@ -77,9 +42,10 @@ export function CropImage() {
   const [bottom, setBottom] = useState<number | string>(0);
   const [format, setFormat] = useState<string | null>('PNG');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ImageResponse | null>(null);
+  const [result, setResult] = useState<ImageResult | null>(null);
 
-  const originalPreview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  const originalPreview = useObjectUrl(file);
+  const resultUrl = useObjectUrl(result?.blob ?? null);
 
   useEffect(() => {
     if (!originalPreview) {
@@ -94,7 +60,6 @@ export function CropImage() {
   }, [originalPreview]);
 
   function handleFilesSelected(files: FileWithPath[]): void {
-    if (originalPreview) URL.revokeObjectURL(originalPreview);
     setFile(files[0] ?? null);
     setResult(null);
     setLeft(0);
@@ -109,26 +74,25 @@ export function CropImage() {
       return;
     }
 
+    const outFormat = format ?? 'PNG';
     setLoading(true);
     setResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('left', String(left));
-      formData.append('top', String(top));
-      formData.append('right', String(right));
-      formData.append('bottom', String(bottom));
-      formData.append('format', format ?? 'PNG');
-
-      const response = await apiPost('/image/crop/file', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
-      }
-
-      const data: ImageResponse = await response.json();
-      setResult(data);
+      const output = canRunClientSide(file, outFormat)
+        ? await cropImage(
+            file,
+            { left: Number(left), top: Number(top), right: Number(right), bottom: Number(bottom) },
+            outFormat,
+          )
+        : await imageViaBackend('/image/crop/file', file, {
+            left: Number(left),
+            top: Number(top),
+            right: Number(right),
+            bottom: Number(bottom),
+            format: outFormat,
+          });
+      setResult(output);
       notifications.show({ title: 'Success', message: 'Image cropped successfully.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
@@ -138,9 +102,10 @@ export function CropImage() {
     }
   }
 
-  const resultDataUri = result
-    ? `data:image/${(result.format ?? 'png').toLowerCase()};base64,${result.result}`
-    : null;
+  function handleDownload(): void {
+    if (!result || !file) return;
+    downloadBlob(result.blob, withSuffix(file.name, 'cropped', result.format.toLowerCase()));
+  }
 
   return (
     <Stack gap="1rem">
@@ -228,7 +193,7 @@ export function CropImage() {
         </Stack>
       </Paper>
 
-      {result && resultDataUri && originalPreview && (
+      {result && resultUrl && originalPreview && (
         <Paper withBorder p="1.5rem">
           <Text fw={500} mb="0.75rem">Before / After</Text>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="1rem">
@@ -251,7 +216,7 @@ export function CropImage() {
             <Stack gap="0.5rem" align="center">
               <Text size="sm" c="dimmed">Cropped</Text>
               <MantineImage
-                src={resultDataUri}
+                src={resultUrl}
                 alt="Cropped"
                 mah="16rem"
                 fit="contain"
@@ -270,9 +235,7 @@ export function CropImage() {
             variant="light"
             leftSection={<IconDownload size={16} />}
             mt="1rem"
-            onClick={() =>
-              downloadBase64Image(result.result, result.format, `cropped.${result.format.toLowerCase()}`)
-            }
+            onClick={handleDownload}
           >
             Download Cropped Image
           </Button>

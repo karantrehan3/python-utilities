@@ -15,16 +15,10 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCopy, IconCheck } from '@tabler/icons-react';
-import { apiPostJson } from '../../api/client';
 import { PageHeader } from '../shared/PageHeader';
+import { diffText, type DiffResult } from '../../lib/text/diff';
 
-interface DiffResponse {
-  text1: string;
-  text2: string;
-  diff: string;
-  additions: number;
-  deletions: number;
-}
+type DiffResponse = DiffResult;
 
 export function DiffText() {
   const [text1, setText1] = useState('');
@@ -44,7 +38,7 @@ export function DiffText() {
 
     setLoading(true);
     try {
-      const response = await apiPostJson<DiffResponse>('/text/diff', { text1, text2 });
+      const response = await diffText(text1, text2);
       setResult(response);
       notifications.show({
         title: 'Success',

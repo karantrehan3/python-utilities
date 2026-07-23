@@ -24,6 +24,7 @@ limiter = Limiter(
     key_func=_client_ip,
     default_limits=[settings.rate_limit],
     enabled=settings.rate_limit_enabled,
+    storage_uri=settings.rate_limit_storage_uri or "memory://",
     headers_enabled=True,
 )
 

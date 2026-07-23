@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     # aren't blocked. Set RATE_LIMIT (e.g. "30/minute", "1000/day") or disable.
     rate_limit_enabled: bool = True
     rate_limit: str = "60/minute"
+    # In-memory by default (fine for a single instance/worker). For durability
+    # across restarts or multiple instances/workers, point at a shared store,
+    # e.g. RATE_LIMIT_STORAGE_URI=redis://:pass@host:6379 (needs the `redis` pkg).
+    rate_limit_storage_uri: str = ""
 
     # API Configuration
     api_prefix: str = "/api/v1"

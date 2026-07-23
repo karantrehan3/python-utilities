@@ -20,7 +20,7 @@ dev:
 dev-server:
 	cd server && \
 	. venv/bin/activate && \
-	PYTHONPATH=src uvicorn src.app.server:app --host 0.0.0.0 --port 4001 --reload
+	DEBUG=true PYTHONPATH=src uvicorn src.app.server:app --host 0.0.0.0 --port 4001 --reload
 
 dev-client:
 	cd client && npm run dev

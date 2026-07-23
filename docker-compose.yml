@@ -7,6 +7,9 @@ services:
       - "4001:4001"
     environment:
       - PYTHONUNBUFFERED=1
+      # Dev only: exposes /docs, /redoc, /openapi.json. Production (Render) leaves
+      # DEBUG unset so the API docs stay hidden.
+      - DEBUG=true
     volumes:
       - ./server/src:/app/src
     command: uvicorn src.app.server:app --host 0.0.0.0 --port 4001 --reload

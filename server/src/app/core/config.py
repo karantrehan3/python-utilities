@@ -33,6 +33,12 @@ class Settings(BaseSettings):
     max_pdf_pages: int = 2000  # cap fan-out operations (split, to-images)
     max_image_pixels: int = 64_000_000  # ~64 MP, Pillow decompression-bomb guard
 
+    # Per-IP rate limiting (only the server-side endpoints are affected; the
+    # client-side tools never call the API). Generous by default so real users
+    # aren't blocked. Set RATE_LIMIT (e.g. "30/minute", "1000/day") or disable.
+    rate_limit_enabled: bool = True
+    rate_limit: str = "60/minute"
+
     # API Configuration
     api_prefix: str = "/api/v1"
     docs_url: str = "/docs"

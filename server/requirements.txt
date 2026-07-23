@@ -14,4 +14,7 @@ Pillow==11.3.0
 # HTTP requests for URL downloads
 httpx==0.28.1
 
+# IP-based rate limiting
+slowapi==0.1.9
+
 # Additional utilities can be added here as needed

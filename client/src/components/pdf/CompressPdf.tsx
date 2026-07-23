@@ -1,21 +1,18 @@
 import { useState } from 'react';
-import { Button, Group, Paper, Progress, Slider, Stack, Switch, Text, ThemeIcon } from '@mantine/core';
+import { Button, Slider, Stack, Switch, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import type { FileWithPath } from '@mantine/dropzone';
-import { IconArrowDown } from '@tabler/icons-react';
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
 import { apiPost } from '../../api/client';
 import { PdfResultPreview } from '../shared/PdfResultPreview';
-import { formatBytes } from '../../lib/format';
+import { CompressionResult } from '../shared/CompressionResult';
 import { apiErrorMessage, filenameFromResponse, withSuffix } from '../../lib/download';
 
-interface CompressionStats {
-  originalSize: string;
-  compressedSize: string;
-  reduction: string;
-  reductionPercent: number;
+interface CompressionSizes {
+  original: number;
+  compressed: number;
 }
 
 export function CompressPdf() {
@@ -23,13 +20,13 @@ export function CompressPdf() {
   const [imageQuality, setImageQuality] = useState(80);
   const [garbageCollect, setGarbageCollect] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState<CompressionStats | null>(null);
+  const [sizes, setSizes] = useState<CompressionSizes | null>(null);
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
   const [resultFilename, setResultFilename] = useState('compressed.pdf');
 
   const handleFilesSelected = (files: FileWithPath[]) => {
     setFile(files[0] ?? null);
-    setStats(null);
+    setSizes(null);
     setResultBlob(null);
   };
 
@@ -64,14 +61,9 @@ export function CompressPdf() {
       setResultFilename(filenameFromResponse(response, withSuffix(file.name, 'compressed')));
 
       if (originalSize && compressedSize) {
-        const origBytes = parseInt(originalSize, 10);
-        const compBytes = parseInt(compressedSize, 10);
-        const reduction = origBytes > 0 ? ((1 - compBytes / origBytes) * 100).toFixed(1) : '0';
-        setStats({
-          originalSize: formatBytes(origBytes),
-          compressedSize: formatBytes(compBytes),
-          reduction: `${reduction}%`,
-          reductionPercent: parseFloat(reduction),
+        setSizes({
+          original: parseInt(originalSize, 10),
+          compressed: parseInt(compressedSize, 10),
         });
       }
 
@@ -139,43 +131,8 @@ export function CompressPdf() {
 
       {resultBlob && <PdfResultPreview blob={resultBlob} filename={resultFilename} />}
 
-      {stats && (
-        <Paper withBorder p="1rem" mt="0.5rem">
-          <Text size="sm" fw={500} mb="0.75rem">
-            Compression Results
-          </Text>
-          <Group gap="2rem" mb="1rem">
-            <Stack gap="0.125rem">
-              <Text size="xs" c="dimmed">Original</Text>
-              <Text size="sm" fw={500}>{stats.originalSize}</Text>
-            </Stack>
-            <ThemeIcon variant="light" color="green" size="sm">
-              <IconArrowDown size={14} />
-            </ThemeIcon>
-            <Stack gap="0.125rem">
-              <Text size="xs" c="dimmed">Compressed</Text>
-              <Text size="sm" fw={500}>{stats.compressedSize}</Text>
-            </Stack>
-            <Stack gap="0.125rem">
-              <Text size="xs" c="dimmed">Saved</Text>
-              <Text size="sm" fw={700} c="green">{stats.reduction}</Text>
-            </Stack>
-          </Group>
-          <Progress.Root size="xl">
-            <Progress.Section
-              value={100 - stats.reductionPercent}
-              color="blue"
-            >
-              <Progress.Label>Compressed</Progress.Label>
-            </Progress.Section>
-            <Progress.Section
-              value={stats.reductionPercent}
-              color="green"
-            >
-              <Progress.Label>Saved</Progress.Label>
-            </Progress.Section>
-          </Progress.Root>
-        </Paper>
+      {sizes && (
+        <CompressionResult originalBytes={sizes.original} compressedBytes={sizes.compressed} />
       )}
     </Stack>
   );

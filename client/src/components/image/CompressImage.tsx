@@ -10,26 +10,23 @@ import {
   Badge,
   LoadingOverlay,
   Image as MantineImage,
-  Progress,
-  ThemeIcon,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import type { FileWithPath } from '@mantine/dropzone';
-import { IconFileZip, IconDownload, IconArrowDown } from '@tabler/icons-react';
+import { IconFileZip, IconDownload } from '@tabler/icons-react';
 
 import { FileDropzone } from '../shared/FileDropzone';
 import { PageHeader } from '../shared/PageHeader';
+import { CompressionResult } from '../shared/CompressionResult';
 import { useObjectUrl } from '../../hooks/useObjectUrl';
 import { canRunClientSide, compressImage, type ImageResult } from '../../lib/image/canvas';
 import { imageViaBackend } from '../../lib/image/backend';
 import { downloadBlob, withSuffix } from '../../lib/download';
 import { formatBytes } from '../../lib/format';
 
-interface CompressionStats {
-  originalSize: string;
-  compressedSize: string;
-  reduction: string;
-  reductionPercent: number;
+interface CompressionSizes {
+  original: number;
+  compressed: number;
 }
 
 const FORMAT_OPTIONS = [
@@ -44,7 +41,7 @@ export function CompressImage() {
   const [format, setFormat] = useState<string | null>('JPEG');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ImageResult | null>(null);
-  const [stats, setStats] = useState<CompressionStats | null>(null);
+  const [sizes, setSizes] = useState<CompressionSizes | null>(null);
 
   const originalPreview = useObjectUrl(file);
   const resultUrl = useObjectUrl(result?.blob ?? null);
@@ -64,7 +61,7 @@ export function CompressImage() {
   function handleFilesSelected(files: FileWithPath[]): void {
     setFile(files[0] ?? null);
     setResult(null);
-    setStats(null);
+    setSizes(null);
   }
 
   async function handleSubmit(): Promise<void> {
@@ -76,7 +73,7 @@ export function CompressImage() {
     const outFormat = format ?? 'JPEG';
     setLoading(true);
     setResult(null);
-    setStats(null);
+    setSizes(null);
 
     try {
       let output: ImageResult;
@@ -96,14 +93,7 @@ export function CompressImage() {
         compBytes = backend.compressedSize ?? backend.size;
       }
       setResult(output);
-
-      const reduction = origBytes > 0 ? ((1 - compBytes / origBytes) * 100).toFixed(1) : '0';
-      setStats({
-        originalSize: formatBytes(origBytes),
-        compressedSize: formatBytes(compBytes),
-        reduction: `${reduction}%`,
-        reductionPercent: parseFloat(reduction),
-      });
+      setSizes({ original: origBytes, compressed: compBytes });
 
       notifications.show({ title: 'Success', message: 'Image compressed successfully.', color: 'green' });
     } catch (error: unknown) {
@@ -191,37 +181,8 @@ export function CompressImage() {
         </Stack>
       </Paper>
 
-      {stats && (
-        <Paper withBorder p="1rem">
-          <Text size="sm" fw={500} mb="0.75rem">
-            Compression Results
-          </Text>
-          <Group gap="2rem" mb="1rem">
-            <Stack gap="0.125rem">
-              <Text size="xs" c="dimmed">Original</Text>
-              <Text size="sm" fw={500}>{stats.originalSize}</Text>
-            </Stack>
-            <ThemeIcon variant="light" color="green" size="sm">
-              <IconArrowDown size={14} />
-            </ThemeIcon>
-            <Stack gap="0.125rem">
-              <Text size="xs" c="dimmed">Compressed</Text>
-              <Text size="sm" fw={500}>{stats.compressedSize}</Text>
-            </Stack>
-            <Stack gap="0.125rem">
-              <Text size="xs" c="dimmed">Saved</Text>
-              <Text size="sm" fw={700} c="green">{stats.reduction}</Text>
-            </Stack>
-          </Group>
-          <Progress.Root size="xl">
-            <Progress.Section value={Math.max(0, 100 - stats.reductionPercent)} color="blue">
-              <Progress.Label>Compressed</Progress.Label>
-            </Progress.Section>
-            <Progress.Section value={Math.max(0, stats.reductionPercent)} color="green">
-              <Progress.Label>Saved</Progress.Label>
-            </Progress.Section>
-          </Progress.Root>
-        </Paper>
+      {sizes && (
+        <CompressionResult originalBytes={sizes.original} compressedBytes={sizes.compressed} />
       )}
 
       {result && resultUrl && (

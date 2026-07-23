@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kiln — PDF, image &amp; text processing toolkit</title>
-    <meta name="description" content="28 tools for PDF, image, and text processing. Full-stack app with React UI and FastAPI REST API. One container, all your file ops." />
+    <title>Kiln — private, in-browser PDF, image &amp; text tools</title>
+    <meta name="description" content="28 privacy-first tools for PDF, image, and text. Most run entirely in your browser — your files never leave your device. No accounts, no tracking, open source." />
     <link rel="icon" type="image/jpeg" href="logo.jpeg" />
     <meta property="og:title" content="Kiln" />
-    <meta property="og:description" content="28 tools for PDF, image &amp; text processing. Full-stack React + FastAPI toolkit." />
+    <meta property="og:description" content="28 privacy-first PDF, image &amp; text tools that run in your browser. No uploads for most tools, no tracking, open source." />
     <meta property="og:type" content="website" />
     <script>(function(){var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)})()</script>
     <style>
@@ -338,6 +338,25 @@
         color: var(--accent);
         border: 1px solid var(--border);
         margin-bottom: 1rem;
+      }
+      .trust-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1.4rem;
+      }
+      .trust-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        font-family: var(--sans);
+        color: var(--text-secondary);
+        background: var(--surface);
+        border: 1px solid var(--border);
       }
       .hero-actions {
         display: flex;
@@ -1201,6 +1220,7 @@
         .hero-text .tagline { margin-left: auto; margin-right: auto; }
         .hero-text .tool-count-badge { margin-left: auto; margin-right: auto; }
         .hero-actions { justify-content: center; }
+        .trust-badges { justify-content: center; }
         .mock-app { max-width: 420px; margin: 0 auto; height: 340px; }
         .mock-sidebar { width: 120px; min-width: 120px; }
         .how-grid { grid-template-columns: 1fr; gap: 1rem; }
@@ -1253,7 +1273,13 @@
           <div class="hero-text">
             <div class="tool-count-badge">28 tools across PDF, Images, and Text</div>
             <h1>Kiln</h1>
-            <p class="tagline">A full-stack toolkit with a visual browser UI and a REST API. Upload files, process them, preview results — no command line required.</p>
+            <p class="tagline">Private, in-browser tools for PDF, image, and text. Most run entirely on your device — your files never leave the browser — with a few heavier jobs handled by a stateless API that stores nothing.</p>
+            <div class="trust-badges" aria-label="Privacy and trust">
+              <span class="trust-badge">&#128274; Privacy by Design</span>
+              <span class="trust-badge">&#128683; No Tracking · No Ads</span>
+              <span class="trust-badge">&#128421;&#65039; Client-Side Processing</span>
+              <span class="trust-badge">&#9878;&#65039; GDPR &amp; CCPA Aligned</span>
+            </div>
             <div class="hero-actions">
               <a class="btn btn-primary" href="https://kiln-5r16.onrender.com/" target="_blank" rel="noopener">Try it Live &#8599;</a>
               <a class="btn btn-ghost" href="#quick-start">Get Started &#8594;</a>
@@ -1427,13 +1453,42 @@
             <div class="how-step">
               <div class="how-icon">&#9881;&#65039;</div>
               <h3>Process</h3>
-              <p>Choose your operation and settings. The FastAPI backend handles the heavy lifting.</p>
+              <p>Choose your operation and settings. Most tools run entirely in your browser — nothing is uploaded; only a few heavier jobs use the stateless API.</p>
             </div>
             <div class="how-step">
               <div class="how-icon">&#128064;</div>
               <h3>Preview &amp; Download</h3>
               <p>See results inline — PDF previews, before/after comparisons, compression stats — then download.</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ PRIVACY ════════ -->
+      <section id="privacy" class="reveal" aria-labelledby="privacy-heading">
+        <div class="wrap">
+          <p class="section-label">Privacy</p>
+          <h2 id="privacy-heading">Your files stay yours</h2>
+          <div class="how-grid">
+            <div class="how-step">
+              <div class="how-icon">&#128421;&#65039;</div>
+              <h3>Runs in your browser</h3>
+              <p>All text tools and most PDF and image operations run entirely on your device using native Web APIs. For these, files are never uploaded anywhere.</p>
+            </div>
+            <div class="how-step">
+              <div class="how-icon">&#128465;&#65039;</div>
+              <h3>Nothing is stored</h3>
+              <p>The few operations that need the server (PDF compress, protect, unlock; some image formats) are processed in memory and discarded immediately — never written to disk or logged.</p>
+            </div>
+            <div class="how-step">
+              <div class="how-icon">&#128683;</div>
+              <h3>No tracking, ever</h3>
+              <p>No accounts, no analytics, no advertising cookies. Kiln is open source, so every claim here is verifiable in the code.</p>
+            </div>
+          </div>
+          <div class="hero-actions" style="margin-top: 2rem; justify-content: center;">
+            <a class="btn btn-ghost" href="https://kiln-5r16.onrender.com/privacy" target="_blank" rel="noopener">Privacy Policy &#8599;</a>
+            <a class="btn btn-ghost" href="https://kiln-5r16.onrender.com/terms" target="_blank" rel="noopener">Terms &#8599;</a>
           </div>
         </div>
       </section>
@@ -1501,8 +1556,8 @@
           <h2 id="api-heading">Also a REST API</h2>
           <div class="api-intro">
             <div class="api-intro-text">
-              <h3>Every tool is an endpoint</h3>
-              <p>The same backend that powers the UI is exposed as a standard REST API. Use curl, Postman, or any HTTP client. Full Swagger docs ship at <code style="font-family:var(--mono);font-size:0.85rem;background:var(--accent-subtle);border-radius:4px;padding:0.1rem 0.35rem;color:var(--accent)">/docs</code>.</p>
+              <h3>Every tool is also an endpoint</h3>
+              <p>Prefer automation or self-hosting? Every operation is exposed as a rate-limited REST API — use curl, Postman, or any HTTP client. Interactive Swagger docs are available at <code style="font-family:var(--mono);font-size:0.85rem;background:var(--accent-subtle);border-radius:4px;padding:0.1rem 0.35rem;color:var(--accent)">/docs</code> when running in debug mode.</p>
             </div>
             <div class="terminal">
               <div class="terminal-bar">
@@ -1639,13 +1694,17 @@
           <span class="tech-badge">FastAPI</span>
           <span class="tech-badge">React 19</span>
           <span class="tech-badge">TypeScript</span>
-          <span class="tech-badge">Mantine v7</span>
+          <span class="tech-badge">Mantine v9</span>
           <span class="tech-badge">Docker</span>
         </div>
         <p>
           <a href="https://github.com/karantrehan3/kiln" target="_blank" rel="noopener">GitHub</a>
           &middot;
           <a href="https://github.com/karantrehan3/kiln/blob/master/LICENSE" target="_blank" rel="noopener">MIT License</a>
+          &middot;
+          <a href="https://kiln-5r16.onrender.com/privacy" target="_blank" rel="noopener">Privacy</a>
+          &middot;
+          <a href="https://kiln-5r16.onrender.com/terms" target="_blank" rel="noopener">Terms</a>
         </p>
         <p>&copy; 2026 Karan Trehan</p>
       </div>

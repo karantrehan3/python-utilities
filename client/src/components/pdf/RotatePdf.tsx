@@ -6,8 +6,9 @@ import { IconRotate } from '@tabler/icons-react';
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
-import { apiPost } from '../../api/client';
 import { PdfResultPreview } from '../shared/PdfResultPreview';
+import { rotatePdf } from '../../lib/pdf/operations';
+import { withSuffix } from '../../lib/download';
 
 export function RotatePdf() {
   const [file, setFile] = useState<FileWithPath | null>(null);
@@ -31,21 +32,9 @@ export function RotatePdf() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('rotation', rotation);
-    if (pages.trim()) {
-      formData.append('pages', pages.trim());
-    }
-
     setLoading(true);
     try {
-      const response = await apiPost('/pdf/rotate', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
-      }
-      const blob = await response.blob();
+      const blob = await rotatePdf(file, parseInt(rotation, 10), pages.trim() || undefined);
       setResultBlob(blob);
       notifications.show({ title: 'Success', message: 'PDF rotated successfully.', color: 'green' });
     } catch (error: unknown) {
@@ -68,7 +57,7 @@ export function RotatePdf() {
         maxFiles={1}
       />
 
-      {file && <PdfFilePreview name={file.name} size={file.size} />}
+      {file && <PdfFilePreview file={file} />}
 
       <Select
         label="Rotation"
@@ -93,11 +82,8 @@ export function RotatePdf() {
         Rotate PDF
       </Button>
 
-      {resultBlob && (
-        <PdfResultPreview
-          blob={resultBlob}
-          filename={file ? file.name.replace(/\.pdf$/i, '_rotated.pdf') : 'rotated.pdf'}
-        />
+      {resultBlob && file && (
+        <PdfResultPreview blob={resultBlob} filename={withSuffix(file.name, 'rotated')} />
       )}
     </Stack>
   );

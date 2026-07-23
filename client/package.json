@@ -18,6 +18,9 @@
     "@mantine/hooks": "^9.4.1",
     "@mantine/notifications": "^9.4.1",
     "@tabler/icons-react": "^3.44.0",
+    "jszip": "^3.10.1",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.1.200",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1"

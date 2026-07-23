@@ -66,7 +66,7 @@ class PDFController:
 
             # Return the unlocked file as response
             original_filename = file.filename or "document.pdf"
-            filename = f"unlocked_{original_filename}"
+            filename = f"{original_filename.rsplit('.', 1)[0]}_unlocked.pdf"
             return Response(
                 content=file_content,
                 media_type="application/pdf",
@@ -186,7 +186,10 @@ class PDFController:
 
             # Return the subset file as response
             original_filename = file.filename or "document.pdf"
-            filename = f"pages_{start_page}-{end_page}_{original_filename}"
+            filename = (
+                f"{original_filename.rsplit('.', 1)[0]}"
+                f"_pages_{start_page}-{end_page}.pdf"
+            )
             return Response(
                 content=file_content,
                 media_type="application/pdf",
@@ -377,7 +380,7 @@ class PDFController:
             )
 
             original_filename = file.filename or "document.pdf"
-            filename = f"compressed_{original_filename}"
+            filename = f"{original_filename.rsplit('.', 1)[0]}_compressed.pdf"
 
             response = Response(
                 content=file_content,
@@ -622,7 +625,7 @@ class PDFController:
             )
 
             original_filename = file.filename or "document.pdf"
-            filename = f"rotated_{original_filename}"
+            filename = f"{original_filename.rsplit('.', 1)[0]}_rotated.pdf"
             return Response(
                 content=file_content,
                 media_type="application/pdf",
@@ -729,7 +732,7 @@ class PDFController:
             )
 
             original_filename = file.filename or "document.pdf"
-            filename = f"watermarked_{original_filename}"
+            filename = f"{original_filename.rsplit('.', 1)[0]}_watermarked.pdf"
             return Response(
                 content=file_content,
                 media_type="application/pdf",
@@ -918,7 +921,7 @@ class PDFController:
             )
 
             original_filename = file.filename or "document.pdf"
-            filename = f"numbered_{original_filename}"
+            filename = f"{original_filename.rsplit('.', 1)[0]}_numbered.pdf"
             return Response(
                 content=file_content,
                 media_type="application/pdf",
@@ -1015,7 +1018,7 @@ class PDFController:
             )
 
             original_filename = file.filename or "document.pdf"
-            filename = f"protected_{original_filename}"
+            filename = f"{original_filename.rsplit('.', 1)[0]}_protected.pdf"
             return Response(
                 content=file_content,
                 media_type="application/pdf",

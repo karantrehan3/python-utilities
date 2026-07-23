@@ -6,12 +6,15 @@ import { IconHash } from '@tabler/icons-react';
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
-import { apiPost } from '../../api/client';
 import { PdfResultPreview } from '../shared/PdfResultPreview';
+import { addPageNumbers } from '../../lib/pdf/operations';
+import { withSuffix } from '../../lib/download';
+
+type PageNumberPosition = 'bottom-center' | 'bottom-right' | 'bottom-left';
 
 export function PageNumbersPdf() {
   const [file, setFile] = useState<FileWithPath | null>(null);
-  const [position, setPosition] = useState<string>('bottom-center');
+  const [position, setPosition] = useState<PageNumberPosition>('bottom-center');
   const [startNumber, setStartNumber] = useState<number>(1);
   const [fontSize, setFontSize] = useState<number>(12);
   const [loading, setLoading] = useState(false);
@@ -32,20 +35,9 @@ export function PageNumbersPdf() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('position', position);
-    formData.append('start_number', String(startNumber));
-    formData.append('font_size', String(fontSize));
-
     setLoading(true);
     try {
-      const response = await apiPost('/pdf/add-page-numbers', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
-      }
-      const blob = await response.blob();
+      const blob = await addPageNumbers(file, position, startNumber, fontSize);
       setResultBlob(blob);
       notifications.show({ title: 'Success', message: 'Page numbers added.', color: 'green' });
     } catch (error: unknown) {
@@ -68,7 +60,7 @@ export function PageNumbersPdf() {
         maxFiles={1}
       />
 
-      {file && <PdfFilePreview name={file.name} size={file.size} />}
+      {file && <PdfFilePreview file={file} />}
 
       <Select
         label="Position"
@@ -78,7 +70,7 @@ export function PageNumbersPdf() {
           { value: 'bottom-left', label: 'Bottom Left' },
         ]}
         value={position}
-        onChange={(value) => setPosition(value ?? 'bottom-center')}
+        onChange={(value) => setPosition((value as PageNumberPosition) ?? 'bottom-center')}
         leftSection={<IconHash size={16} />}
       />
 
@@ -101,7 +93,9 @@ export function PageNumbersPdf() {
         Add Page Numbers
       </Button>
 
-      {resultBlob && <PdfResultPreview blob={resultBlob} filename="numbered.pdf" />}
+      {resultBlob && file && (
+        <PdfResultPreview blob={resultBlob} filename={withSuffix(file.name, 'numbered')} />
+      )}
     </Stack>
   );
 }

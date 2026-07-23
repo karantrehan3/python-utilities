@@ -6,15 +6,18 @@ import { IconDroplet } from '@tabler/icons-react';
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
-import { apiPost } from '../../api/client';
 import { PdfResultPreview } from '../shared/PdfResultPreview';
+import { watermarkPdf } from '../../lib/pdf/operations';
+import { withSuffix } from '../../lib/download';
+
+type WatermarkPosition = 'center' | 'diagonal';
 
 export function WatermarkPdf() {
   const [file, setFile] = useState<FileWithPath | null>(null);
   const [text, setText] = useState('');
   const [fontSize, setFontSize] = useState<number>(48);
   const [opacity, setOpacity] = useState(0.3);
-  const [position, setPosition] = useState<string>('center');
+  const [position, setPosition] = useState<WatermarkPosition>('center');
   const [loading, setLoading] = useState(false);
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
@@ -41,21 +44,9 @@ export function WatermarkPdf() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('text', text.trim());
-    formData.append('font_size', String(fontSize));
-    formData.append('opacity', String(opacity));
-    formData.append('position', position);
-
     setLoading(true);
     try {
-      const response = await apiPost('/pdf/watermark', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
-      }
-      const blob = await response.blob();
+      const blob = await watermarkPdf(file, text.trim(), fontSize, opacity, position);
       setResultBlob(blob);
       notifications.show({ title: 'Success', message: 'Watermark added successfully.', color: 'green' });
     } catch (error: unknown) {
@@ -78,7 +69,7 @@ export function WatermarkPdf() {
         maxFiles={1}
       />
 
-      {file && <PdfFilePreview name={file.name} size={file.size} />}
+      {file && <PdfFilePreview file={file} />}
 
       <TextInput
         label="Watermark text"
@@ -124,18 +115,15 @@ export function WatermarkPdf() {
           { value: 'diagonal', label: 'Diagonal' },
         ]}
         value={position}
-        onChange={(value) => setPosition(value ?? 'center')}
+        onChange={(value) => setPosition((value as WatermarkPosition) ?? 'center')}
       />
 
       <Button onClick={handleSubmit} loading={loading} disabled={!file || !text.trim()} mt="0.5rem">
         Add Watermark
       </Button>
 
-      {resultBlob && (
-        <PdfResultPreview
-          blob={resultBlob}
-          filename={file ? file.name.replace(/\.pdf$/i, '_watermarked.pdf') : 'watermarked.pdf'}
-        />
+      {resultBlob && file && (
+        <PdfResultPreview blob={resultBlob} filename={withSuffix(file.name, 'watermarked')} />
       )}
     </Stack>
   );

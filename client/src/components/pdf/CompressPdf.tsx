@@ -8,19 +8,14 @@ import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
 import { apiPost } from '../../api/client';
 import { PdfResultPreview } from '../shared/PdfResultPreview';
+import { formatBytes } from '../../lib/format';
+import { filenameFromResponse, withSuffix } from '../../lib/download';
 
 interface CompressionStats {
   originalSize: string;
   compressedSize: string;
   reduction: string;
   reductionPercent: number;
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${units[i]}`;
 }
 
 export function CompressPdf() {
@@ -30,6 +25,7 @@ export function CompressPdf() {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<CompressionStats | null>(null);
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
+  const [resultFilename, setResultFilename] = useState('compressed.pdf');
 
   const handleFilesSelected = (files: FileWithPath[]) => {
     setFile(files[0] ?? null);
@@ -65,6 +61,7 @@ export function CompressPdf() {
 
       const blob = await response.blob();
       setResultBlob(blob);
+      setResultFilename(filenameFromResponse(response, withSuffix(file.name, 'compressed')));
 
       if (originalSize && compressedSize) {
         const origBytes = parseInt(originalSize, 10);
@@ -106,7 +103,7 @@ export function CompressPdf() {
         maxFiles={1}
       />
 
-      {file && <PdfFilePreview name={file.name} size={file.size} />}
+      {file && <PdfFilePreview file={file} />}
 
       <Stack gap="0.25rem">
         <Text size="sm" fw={500}>
@@ -140,7 +137,7 @@ export function CompressPdf() {
         Compress PDF
       </Button>
 
-      {resultBlob && file && <PdfResultPreview blob={resultBlob} filename={file.name.replace(/\.pdf$/i, '_compressed.pdf')} />}
+      {resultBlob && <PdfResultPreview blob={resultBlob} filename={resultFilename} />}
 
       {stats && (
         <Paper withBorder p="1rem" mt="0.5rem">

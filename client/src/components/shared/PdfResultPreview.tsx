@@ -1,17 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Button, Group, Paper, Text, Badge } from '@mantine/core';
+import { Badge, Button, Group, Paper, Text, Tooltip } from '@mantine/core';
 import { IconDownload, IconFileTypePdf } from '@tabler/icons-react';
+import { formatBytes } from '../../lib/format';
+import { downloadBlob } from '../../lib/download';
 
 interface PdfResultPreviewProps {
   blob: Blob;
   filename: string;
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
 }
 
 export function PdfResultPreview({ blob, filename }: PdfResultPreviewProps) {
@@ -23,36 +18,32 @@ export function PdfResultPreview({ blob, filename }: PdfResultPreviewProps) {
     return () => URL.revokeObjectURL(blobUrl);
   }, [blob]);
 
-  const handleDownload = () => {
-    if (!url) return;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
   if (!url) return null;
 
   return (
     <Paper withBorder p="1rem" mt="1rem">
-      <Group justify="space-between" mb="0.75rem">
-        <Group gap="0.5rem">
+      <Group justify="space-between" mb="0.75rem" wrap="nowrap">
+        <Group gap="0.5rem" wrap="nowrap" style={{ overflow: 'hidden' }}>
           <IconFileTypePdf size={20} />
-          <Text fw={500}>Result Preview</Text>
+          <Text fw={500}>Result</Text>
+          <Text size="sm" c="dimmed" truncate maw="16rem">
+            {filename}
+          </Text>
           <Badge variant="light" size="sm" color="gray">
             {formatBytes(blob.size)}
           </Badge>
         </Group>
-        <Button
-          variant="light"
-          size="sm"
-          leftSection={<IconDownload size={16} />}
-          onClick={handleDownload}
-        >
-          Download {filename}
-        </Button>
+        <Tooltip label={`Download ${filename}`} withArrow>
+          <Button
+            variant="light"
+            size="sm"
+            leftSection={<IconDownload size={16} />}
+            onClick={() => downloadBlob(blob, filename)}
+            style={{ flexShrink: 0 }}
+          >
+            Download
+          </Button>
+        </Tooltip>
       </Group>
       <iframe
         src={url}

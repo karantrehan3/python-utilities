@@ -8,6 +8,7 @@ import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
 import { apiPost } from '../../api/client';
 import { PdfResultPreview } from '../shared/PdfResultPreview';
+import { filenameFromResponse, withSuffix } from '../../lib/download';
 
 export function ProtectPdf() {
   const [file, setFile] = useState<FileWithPath | null>(null);
@@ -15,6 +16,7 @@ export function ProtectPdf() {
   const [ownerPassword, setOwnerPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
+  const [resultFilename, setResultFilename] = useState('protected.pdf');
 
   const handleFilesSelected = (files: FileWithPath[]) => {
     setFile(files[0] ?? null);
@@ -55,6 +57,7 @@ export function ProtectPdf() {
       }
       const blob = await response.blob();
       setResultBlob(blob);
+      setResultFilename(filenameFromResponse(response, withSuffix(file.name, 'protected')));
       notifications.show({ title: 'Success', message: 'PDF protected successfully.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to protect PDF.';
@@ -76,7 +79,7 @@ export function ProtectPdf() {
         maxFiles={1}
       />
 
-      {file && <PdfFilePreview name={file.name} size={file.size} />}
+      {file && <PdfFilePreview file={file} />}
 
       <TextInput
         label="User password"
@@ -101,12 +104,7 @@ export function ProtectPdf() {
         Protect PDF
       </Button>
 
-      {resultBlob && (
-        <PdfResultPreview
-          blob={resultBlob}
-          filename={file ? file.name.replace(/\.pdf$/i, '_protected.pdf') : 'protected.pdf'}
-        />
-      )}
+      {resultBlob && <PdfResultPreview blob={resultBlob} filename={resultFilename} />}
     </Stack>
   );
 }

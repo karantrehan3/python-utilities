@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button, Paper, SimpleGrid, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import type { FileWithPath } from '@mantine/dropzone';
@@ -15,17 +15,21 @@ import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortab
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { SortableImageCard } from '../shared/SortableImageCard';
-import { apiPost } from '../../api/client';
 import { PdfResultPreview } from '../shared/PdfResultPreview';
+import { imagesToPdf } from '../../lib/pdf/operations';
 
+// Browser-decodable raster formats. TIFF is intentionally excluded — browsers
+// can't decode it on a canvas, so it can't be embedded client-side.
 const IMAGE_ACCEPT = [
   'image/png',
   'image/jpeg',
   'image/jpg',
   'image/webp',
   'image/bmp',
-  'image/tiff',
+  'image/gif',
 ];
+
+const MAX_FILES = 50;
 
 interface FileItem {
   id: string;
@@ -40,17 +44,45 @@ export function ImagesToPdf() {
   const [loading, setLoading] = useState(false);
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
+  // Track live object URLs so we can revoke them on unmount without leaking.
+  const itemsRef = useRef<FileItem[]>([]);
+  itemsRef.current = items;
+  useEffect(() => {
+    return () => {
+      itemsRef.current.forEach((item) => URL.revokeObjectURL(item.preview));
+    };
+  }, []);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
   const handleFilesSelected = useCallback((newFiles: FileWithPath[]) => {
-    const newItems = newFiles.map((file) => ({
-      id: `img-${++nextId}`,
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-    setItems((prev) => [...prev, ...newItems].slice(0, 50));
+    setItems((prev) => {
+      const remaining = MAX_FILES - prev.length;
+      if (remaining <= 0) {
+        notifications.show({
+          title: 'File limit reached',
+          message: `You can add at most ${MAX_FILES} images.`,
+          color: 'yellow',
+        });
+        return prev;
+      }
+      const accepted = newFiles.slice(0, remaining);
+      if (newFiles.length > accepted.length) {
+        notifications.show({
+          title: 'Some images skipped',
+          message: `Only ${accepted.length} added; the ${MAX_FILES}-image limit was reached.`,
+          color: 'yellow',
+        });
+      }
+      const newItems = accepted.map((file) => ({
+        id: `img-${++nextId}`,
+        file,
+        preview: URL.createObjectURL(file),
+      }));
+      return [...prev, ...newItems];
+    });
     setResultBlob(null);
   }, []);
 
@@ -78,19 +110,9 @@ export function ImagesToPdf() {
       return;
     }
 
-    const formData = new FormData();
-    for (const item of items) {
-      formData.append('files', item.file);
-    }
-
     setLoading(true);
     try {
-      const response = await apiPost('/pdf/from-images', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
-      }
-      const blob = await response.blob();
+      const blob = await imagesToPdf(items.map((i) => i.file));
       setResultBlob(blob);
       notifications.show({ title: 'Success', message: 'PDF created from images.', color: 'green' });
     } catch (error: unknown) {
@@ -111,9 +133,9 @@ export function ImagesToPdf() {
       <FileDropzone
         onFilesSelected={handleFilesSelected}
         label="Upload Images"
-        description={`Drag images here or click to browse (${items.length}/50)`}
+        description={`Drag images here or click to browse (${items.length}/${MAX_FILES})`}
         accept={IMAGE_ACCEPT}
-        maxFiles={50}
+        maxFiles={MAX_FILES}
       />
 
       {items.length > 0 && (

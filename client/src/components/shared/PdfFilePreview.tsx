@@ -1,34 +1,35 @@
-import { Group, Paper, Stack, Text, Badge, ThemeIcon } from '@mantine/core';
-import { IconFileTypePdf } from '@tabler/icons-react';
+import { Badge, Group, Paper, Stack, Text } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { formatBytes } from '../../lib/format';
+import { PdfThumbnail } from './PdfThumbnail';
+import { PdfPreviewModal } from './PdfPreviewModal';
 
 interface PdfFilePreviewProps {
-  name: string;
-  size: number;
+  file: File;
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
-}
+export function PdfFilePreview({ file }: PdfFilePreviewProps) {
+  const [opened, { open, close }] = useDisclosure(false);
 
-export function PdfFilePreview({ name, size }: PdfFilePreviewProps) {
   return (
-    <Paper withBorder p="0.75rem" bg="var(--mantine-color-gray-light)">
-      <Group gap="0.75rem">
-        <ThemeIcon size="2.5rem" variant="light" color="red" radius="md">
-          <IconFileTypePdf size={20} />
-        </ThemeIcon>
-        <Stack gap="0.125rem">
-          <Text size="sm" fw={500} truncate maw="20rem">
-            {name}
-          </Text>
-          <Badge variant="light" size="sm" color="gray" w="fit-content">
-            {formatBytes(size)}
-          </Badge>
-        </Stack>
-      </Group>
-    </Paper>
+    <>
+      <Paper withBorder p="0.75rem" bg="var(--mantine-color-gray-light)">
+        <Group gap="0.75rem" wrap="nowrap">
+          <PdfThumbnail file={file} width={56} height={72} onClick={open} />
+          <Stack gap="0.25rem" style={{ overflow: 'hidden' }}>
+            <Text size="sm" fw={500} truncate maw="20rem">
+              {file.name}
+            </Text>
+            <Badge variant="light" size="sm" color="gray" w="fit-content">
+              {formatBytes(file.size)}
+            </Badge>
+            <Text size="xs" c="dimmed">
+              Click the thumbnail to preview
+            </Text>
+          </Stack>
+        </Group>
+      </Paper>
+      <PdfPreviewModal file={file} title={file.name} opened={opened} onClose={close} />
+    </>
   );
 }

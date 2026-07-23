@@ -6,16 +6,22 @@ import { IconPhoto } from '@tabler/icons-react';
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
-import { apiPost } from '../../api/client';
+import { ArchiveResultPreview } from '../shared/ArchiveResultPreview';
+import { pdfToImages } from '../../lib/pdf/rasterize';
+import { withSuffix } from '../../lib/download';
+
+type ImageFormat = 'png' | 'jpeg';
 
 export function PdfToImages() {
   const [file, setFile] = useState<FileWithPath | null>(null);
-  const [format, setFormat] = useState<string>('png');
+  const [format, setFormat] = useState<ImageFormat>('png');
   const [dpi, setDpi] = useState<number>(150);
   const [loading, setLoading] = useState(false);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   const handleFilesSelected = (files: FileWithPath[]) => {
     setFile(files[0] ?? null);
+    setResultBlob(null);
   };
 
   const handleSubmit = async () => {
@@ -28,30 +34,11 @@ export function PdfToImages() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('format', format);
-    formData.append('dpi', String(dpi));
-
     setLoading(true);
     try {
-      const response = await apiPost('/pdf/to-images', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'pdf_pages.zip';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      notifications.show({ title: 'Success', message: 'Page images downloaded as ZIP.', color: 'green' });
+      const blob = await pdfToImages(file, format, dpi);
+      setResultBlob(blob);
+      notifications.show({ title: 'Success', message: 'Pages rendered to images.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to convert PDF to images.';
       notifications.show({ title: 'Error', message, color: 'red' });
@@ -72,7 +59,7 @@ export function PdfToImages() {
         maxFiles={1}
       />
 
-      {file && <PdfFilePreview name={file.name} size={file.size} />}
+      {file && <PdfFilePreview file={file} />}
 
       <Select
         label="Image format"
@@ -81,7 +68,7 @@ export function PdfToImages() {
           { value: 'jpeg', label: 'JPEG' },
         ]}
         value={format}
-        onChange={(value) => setFormat(value ?? 'png')}
+        onChange={(value) => setFormat((value as ImageFormat) ?? 'png')}
         leftSection={<IconPhoto size={16} />}
       />
 
@@ -97,6 +84,10 @@ export function PdfToImages() {
       <Button onClick={handleSubmit} loading={loading} disabled={!file} mt="0.5rem">
         Convert to Images
       </Button>
+
+      {resultBlob && file && (
+        <ArchiveResultPreview blob={resultBlob} filename={withSuffix(file.name, 'images', 'zip')} />
+      )}
     </Stack>
   );
 }

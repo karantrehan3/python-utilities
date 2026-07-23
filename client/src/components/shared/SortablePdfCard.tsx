@@ -1,39 +1,24 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import {
-  ActionIcon,
-  Badge,
-  Group,
-  Paper,
-  Text,
-  ThemeIcon,
-} from '@mantine/core';
-import { IconFileTypePdf, IconGripVertical, IconX } from '@tabler/icons-react';
+import { ActionIcon, Badge, Group, Paper, Stack, Text } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { IconGripVertical, IconX } from '@tabler/icons-react';
+import { formatBytes } from '../../lib/format';
+import { PdfThumbnail } from './PdfThumbnail';
+import { PdfPreviewModal } from './PdfPreviewModal';
 
 interface SortablePdfCardProps {
   id: string;
   index: number;
-  name: string;
-  size: number;
+  file: File;
   onRemove: () => void;
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
-}
-
-export function SortablePdfCard({ id, index, name, size, onRemove }: SortablePdfCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
+export function SortablePdfCard({ id, index, file, onRemove }: SortablePdfCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
+  const [opened, { open, close }] = useDisclosure(false);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -51,26 +36,27 @@ export function SortablePdfCard({ id, index, name, size, onRemove }: SortablePdf
           <Badge variant="filled" size="sm" circle>
             {index + 1}
           </Badge>
-          <ThemeIcon size="sm" variant="light" color="red">
-            <IconFileTypePdf size={14} />
-          </ThemeIcon>
-          <Text size="sm" truncate style={{ maxWidth: '14rem' }}>
-            {name}
-          </Text>
-          <Badge variant="light" size="xs" color="gray">
-            {formatBytes(size)}
-          </Badge>
+          <PdfThumbnail file={file} width={32} height={40} onClick={open} />
+          <Stack gap={0} style={{ overflow: 'hidden' }}>
+            <Text size="sm" truncate style={{ maxWidth: '13rem' }}>
+              {file.name}
+            </Text>
+            <Badge variant="light" size="xs" color="gray" w="fit-content">
+              {formatBytes(file.size)}
+            </Badge>
+          </Stack>
         </Group>
         <ActionIcon
           size="sm"
           variant="subtle"
           color="red"
           onClick={onRemove}
-          aria-label={`Remove ${name}`}
+          aria-label={`Remove ${file.name}`}
         >
           <IconX size={14} />
         </ActionIcon>
       </Group>
+      <PdfPreviewModal file={file} title={file.name} opened={opened} onClose={close} />
     </Paper>
   );
 }

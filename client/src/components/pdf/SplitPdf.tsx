@@ -6,14 +6,18 @@ import { IconScissors } from '@tabler/icons-react';
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
-import { apiPost } from '../../api/client';
+import { ArchiveResultPreview } from '../shared/ArchiveResultPreview';
+import { splitPdf } from '../../lib/pdf/operations';
+import { withSuffix } from '../../lib/download';
 
 export function SplitPdf() {
   const [file, setFile] = useState<FileWithPath | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   const handleFilesSelected = (files: FileWithPath[]) => {
     setFile(files[0] ?? null);
+    setResultBlob(null);
   };
 
   const handleSubmit = async () => {
@@ -26,28 +30,11 @@ export function SplitPdf() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     setLoading(true);
     try {
-      const response = await apiPost('/pdf/split', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'split_pages.zip';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      notifications.show({ title: 'Success', message: 'Split pages downloaded as ZIP.', color: 'green' });
+      const blob = await splitPdf(file);
+      setResultBlob(blob);
+      notifications.show({ title: 'Success', message: 'PDF split into individual pages.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to split PDF.';
       notifications.show({ title: 'Error', message, color: 'red' });
@@ -68,7 +55,7 @@ export function SplitPdf() {
         maxFiles={1}
       />
 
-      {file && <PdfFilePreview name={file.name} size={file.size} />}
+      {file && <PdfFilePreview file={file} />}
 
       <Button
         onClick={handleSubmit}
@@ -79,6 +66,10 @@ export function SplitPdf() {
       >
         Split PDF
       </Button>
+
+      {resultBlob && file && (
+        <ArchiveResultPreview blob={resultBlob} filename={withSuffix(file.name, 'split', 'zip')} />
+      )}
     </Stack>
   );
 }

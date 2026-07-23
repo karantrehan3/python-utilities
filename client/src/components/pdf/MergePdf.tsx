@@ -19,14 +19,15 @@ import {
 import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { SortablePdfCard } from '../shared/SortablePdfCard';
-import { apiPost } from '../../api/client';
 import { PdfResultPreview } from '../shared/PdfResultPreview';
+import { mergePdfs } from '../../lib/pdf/operations';
 
 interface PdfItem {
   id: string;
   file: FileWithPath;
 }
 
+const MAX_FILES = 20;
 let nextId = 0;
 
 export function MergePdf() {
@@ -39,11 +40,17 @@ export function MergePdf() {
   );
 
   const handleFilesSelected = useCallback((newFiles: FileWithPath[]) => {
-    const newItems = newFiles.map((file) => ({
-      id: `pdf-${++nextId}`,
-      file,
-    }));
-    setItems((prev) => [...prev, ...newItems].slice(0, 20));
+    setItems((prev) => {
+      const combined = [...prev, ...newFiles.map((file) => ({ id: `pdf-${++nextId}`, file }))];
+      if (combined.length > MAX_FILES) {
+        notifications.show({
+          title: 'File limit reached',
+          message: `Only the first ${MAX_FILES} files are kept; ${combined.length - MAX_FILES} were dropped.`,
+          color: 'yellow',
+        });
+      }
+      return combined.slice(0, MAX_FILES);
+    });
     setResultBlob(null);
   }, []);
 
@@ -71,19 +78,9 @@ export function MergePdf() {
       return;
     }
 
-    const formData = new FormData();
-    for (const item of items) {
-      formData.append('files', item.file);
-    }
-
     setLoading(true);
     try {
-      const response = await apiPost('/pdf/merge', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
-      }
-      const blob = await response.blob();
+      const blob = await mergePdfs(items.map((i) => i.file));
       setResultBlob(blob);
       notifications.show({ title: 'Success', message: 'PDFs merged.', color: 'green' });
     } catch (error: unknown) {
@@ -104,9 +101,9 @@ export function MergePdf() {
       <FileDropzone
         onFilesSelected={handleFilesSelected}
         label="Upload PDFs"
-        description={`Drag PDF files here or click to browse (${items.length}/20)`}
+        description={`Drag PDF files here or click to browse (${items.length}/${MAX_FILES})`}
         accept={['application/pdf']}
-        maxFiles={20}
+        maxFiles={MAX_FILES}
       />
 
       {items.length > 0 && (
@@ -122,8 +119,7 @@ export function MergePdf() {
                     key={item.id}
                     id={item.id}
                     index={index}
-                    name={item.file.name}
-                    size={item.file.size}
+                    file={item.file}
                     onRemove={() => handleRemove(item.id)}
                   />
                 ))}

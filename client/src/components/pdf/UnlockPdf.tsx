@@ -8,12 +8,14 @@ import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
 import { apiPost } from '../../api/client';
 import { PdfResultPreview } from '../shared/PdfResultPreview';
+import { filenameFromResponse, withSuffix } from '../../lib/download';
 
 export function UnlockPdf() {
   const [file, setFile] = useState<FileWithPath | null>(null);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
+  const [resultFilename, setResultFilename] = useState('unlocked.pdf');
 
   const handleFilesSelected = (files: FileWithPath[]) => {
     setFile(files[0] ?? null);
@@ -51,6 +53,7 @@ export function UnlockPdf() {
       }
       const blob = await response.blob();
       setResultBlob(blob);
+      setResultFilename(filenameFromResponse(response, withSuffix(file.name, 'unlocked')));
       notifications.show({ title: 'Success', message: 'PDF unlocked successfully.', color: 'green' });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to unlock PDF.';
@@ -72,7 +75,7 @@ export function UnlockPdf() {
         maxFiles={1}
       />
 
-      {file && <PdfFilePreview name={file.name} size={file.size} />}
+      {file && <PdfFilePreview file={file} />}
 
       <TextInput
         label="Password"
@@ -87,12 +90,7 @@ export function UnlockPdf() {
         Unlock PDF
       </Button>
 
-      {resultBlob && (
-        <PdfResultPreview
-          blob={resultBlob}
-          filename={file ? file.name.replace(/\.pdf$/i, '_unlocked.pdf') : 'unlocked.pdf'}
-        />
-      )}
+      {resultBlob && <PdfResultPreview blob={resultBlob} filename={resultFilename} />}
     </Stack>
   );
 }

@@ -6,7 +6,7 @@ import { PageHeader } from '../shared/PageHeader';
 import { FileDropzone } from '../shared/FileDropzone';
 import { PdfFilePreview } from '../shared/PdfFilePreview';
 import { ResultDisplay } from '../shared/ResultDisplay';
-import { apiPost } from '../../api/client';
+import { getPdfInfo } from '../../lib/pdf/operations';
 
 export function PdfInfo() {
   const [file, setFile] = useState<FileWithPath | null>(null);
@@ -29,18 +29,9 @@ export function PdfInfo() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('include_metadata', String(includeMetadata));
-
     setLoading(true);
     try {
-      const response = await apiPost('/pdf/info', formData);
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || `Request failed with status ${response.status}`);
-      }
-      const data = await response.json();
+      const data = await getPdfInfo(file, includeMetadata);
       setResult(data);
       notifications.show({ title: 'Success', message: 'PDF info retrieved.', color: 'green' });
     } catch (error: unknown) {
@@ -66,7 +57,7 @@ export function PdfInfo() {
         maxFiles={1}
       />
 
-      {file && <PdfFilePreview name={file.name} size={file.size} />}
+      {file && <PdfFilePreview file={file} />}
 
       <Switch
         label="Include metadata"

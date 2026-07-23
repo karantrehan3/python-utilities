@@ -48,6 +48,7 @@ def create_app() -> FastAPI:
         allow_credentials=settings.cors_allow_credentials,
         allow_methods=settings.cors_allow_methods_list,
         allow_headers=settings.cors_allow_headers_list,
+        expose_headers=settings.cors_expose_headers_list,
     )
 
     # Include API router

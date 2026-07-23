@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     cors_allow_credentials: bool = False
     cors_allow_methods: str = "GET,POST,OPTIONS"
     cors_allow_headers: str = "*"
+    # Response headers the browser is allowed to read cross-origin (needed so
+    # download filenames and compression stats work when UI and API differ).
+    cors_expose_headers: str = "Content-Disposition,X-Original-Size,X-Compressed-Size"
 
     # Limits (defense against resource-exhaustion DoS)
     max_upload_bytes: int = 50 * 1024 * 1024  # 50 MB, mirrors the nginx cap
@@ -52,6 +55,10 @@ class Settings(BaseSettings):
     @property
     def cors_allow_headers_list(self) -> List[str]:
         return self._csv(self.cors_allow_headers)
+
+    @property
+    def cors_expose_headers_list(self) -> List[str]:
+        return self._csv(self.cors_expose_headers)
 
 
 # Global settings instance

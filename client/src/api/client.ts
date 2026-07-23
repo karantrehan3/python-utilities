@@ -1,4 +1,8 @@
-const BASE_URL = '/api/v1';
+// Absolute API origin for cross-origin deployments (UI and API on different
+// hosts). Set VITE_API_BASE_URL at build time, e.g. https://kiln-api.onrender.com.
+// Unset → same-origin relative path (works behind an nginx /api proxy).
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+const BASE_URL = `${API_ORIGIN}/api/v1`;
 
 export async function apiPost(path: string, body: FormData): Promise<Response> {
   const response = await fetch(`${BASE_URL}${path}`, {
